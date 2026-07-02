@@ -812,6 +812,52 @@ function advanceWorldClock(day,period){
 }
 function worldClockLabel(){return `${W.clockDay} ${W.clockPeriod}`;}
 
+// ── CANONICAL BASEBALL / SERIES STATE ─────────────────────────────
+// The truth of the Series is DERIVED from the calendar in code, not begged for in prose.
+// Yankees vs Giants; Yankees lead 3–2 going into Tuesday's Game 6; the Giants take Game 6
+// (→3–3); Game 7 is Thursday and is ABANDONED in the 7th — so there is NEVER a champion.
+function seriesState(day){
+  const idx=DAYS.indexOf(day||W.clockDay||'Tuesday');
+  let standing,game;
+  if(idx<=DAYS.indexOf('Tuesday')){ standing='the Yankees lead 3 games to 2'; game='Game 6 is TONIGHT (Tuesday) and has not been decided yet.'; }
+  else if(idx===DAYS.indexOf('Wednesday')){ standing='the Series is tied 3–3 (the Giants took Game 6 on Tuesday night)'; game='Game 7 is Thursday.'; }
+  else if(idx===DAYS.indexOf('Thursday')){ standing='the Series is 3–3'; game='Game 7 is TODAY — it is abandoned in the seventh inning and never finished.'; }
+  else { standing='the Series is 3–3 and was ABANDONED (Game 7 never finished)'; game='There are no more games and there is no champion.'; }
+  return {standing,game,prompt:
+`BASEBALL — CANONICAL, DERIVED FROM THE CALENDAR (this is TRUTH; never contradict it, never invent a different score):
+- 1937 World Series, Yankees vs Giants. As of ${day||W.clockDay||'Tuesday'}: ${standing}. ${game}
+- IMPOSSIBLE — never write any of these: a sweep or "clean sweep" of the Series; a 4–0 or 0–4 Series; a "Game 8" or eighth game; ANY World Series champion or a team that "won the Series." Nobody ever wins this Series — it goes 3–2, then 3–3, then is abandoned.`};
+}
+// Returns a short label of the impossible thing the prose referenced, or null.
+function baseballViolation(text){
+  const t=(text||'').toLowerCase();
+  if(/\b4\s*[–-]\s*0\b|\b0\s*[–-]\s*4\b/.test(t)) return 'an impossible 4–0 Series score';
+  if(/\bgame\s*(?:8|eight)\b|\beighth\s+game\b/.test(t)) return 'a nonexistent Game 8';
+  if(/\b(?:sweep|swept|sweeping)\b[^.]{0,30}\b(?:series|world series|world championship)\b/.test(t)
+   || /\b(?:series|world series)\b[^.]{0,30}\b(?:sweep|swept|sweeping)\b/.test(t)) return 'a Series sweep';
+  if(/\bwon the (?:world )?series\b|\b(?:world )?series (?:winner|title|crown|champ)/.test(t)
+   || /\bchampions?\b[^.]{0,25}\bseries\b|\bseries\b[^.]{0,25}\bchampions?\b/.test(t)) return 'a Series champion (there is none)';
+  return null;
+}
+// If a generated beat references an impossible Series outcome, regenerate ONCE with a hard correction.
+// Fully guarded: any failure returns the original beat unchanged.
+async function enforceBaseball(beat,sys,user,apiKey){
+  try{
+    const v=baseballViolation(beat&&beat.prose);
+    if(!v) return beat;
+    const correction=`\n\nCORRECTION — your previous draft referenced ${v}, which is IMPOSSIBLE in this world. ${seriesState(W.clockDay).prompt}\nRewrite the SAME beat — same events, same characters, same length — with NO impossible baseball reference. Same JSON shape.`;
+    const res=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+      body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:sys+correction},{role:'user',content:user}],temperature:0.7,max_tokens:1400,response_format:{type:"json_object"}})
+    });
+    const data=await res.json();
+    if(data.error) return beat;
+    const fixed=JSON.parse(data.choices?.[0]?.message?.content?.replace(/```json|```/g,'')||'{}');
+    if(fixed&&fixed.prose&&!baseballViolation(fixed.prose)) return fixed;
+    return beat;
+  }catch(e){ return beat; }
+}
+
 let activeId=null,isGen=false,isMemGen=false,ttsActive=false;
 const uid=()=>'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const load=()=>{const s=localStorage.getItem('lateral_v7');if(s)try{W=JSON.parse(s)}catch(e){}migrateFacts();migrateNaming();};
@@ -1784,7 +1830,7 @@ async function generateBeat(direction,jumpCtx,intent){
  - AFTERMATH (Friday–Sunday): The fallout. The cover-up is active. The myth is being built.
  You will be told the character's current day. Write beats that fit the phase.
 
-BASEBALL — FIXED FACTS (never contradict): the 1937 World Series, Yankees vs Giants. The Yankees lead 3 games to 2. Game 6 is Tuesday night; the Giants win it, forcing Game 7 on Thursday. Because the Series stands 3–2, a SWEEP IS IMPOSSIBLE — never mention a sweep, a clean sweep, a 4–0, or a Game 8. Keep every score, standing, and baseball reference consistent with this.
+${seriesState(char.currentDay).prompt}
 
 ═══════════════════════════════════════════
 WHAT A BEAT IS
@@ -1969,7 +2015,8 @@ Day: ${char.currentDay||'Tuesday'}\nTHREAD:\n${thread}${antiRepeat}${arcSummary}
     });
     const data=await res.json();
     if(data.error) throw new Error(data.error.message);
-    const beat=JSON.parse(data.choices?.[0]?.message?.content?.replace(/```json|```/g,'')||'{}');
+    let beat=JSON.parse(data.choices?.[0]?.message?.content?.replace(/```json|```/g,'')||'{}');
+    beat=await enforceBaseball(beat,sys,user,apiKey);
     beat.id=uid();beat.intent=intent||null;
 
     const bArr=W.beats[activeId];
