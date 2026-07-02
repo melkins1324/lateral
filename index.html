@@ -1,0 +1,2375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lateral</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,700&family=IM+Fell+English:ital@0;1&family=Special+Elite&display=swap&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=UnifrakturMaguntia&family=Caveat:wght@400;600&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+/* ── GLOBAL BASE ───────────────────────────── */
+:root{
+  --s1:#f5e6d3;--s2:#e8c9a0;--s3:#d4a574;--s4:#c17f4a;
+  --s5:#a0522d;--s6:#8b3a1a;--s7:#6b2d0e;--s8:#3d1c08;--s9:#2a1205;
+  --bg:#1a0e06;--surface:#241408;--surface2:#2e1a0a;--surface3:#3a2210;
+  --border:#4a3018;--border2:#5a3e22;
+  --text:#f0e6d6;--text2:#c8b090;--text3:#8a6840;
+  --gold:#d4a55a;--gold2:#a07835;--gold3:#3a2510;
+  --ink:#1a0e06;--paper:#f5edd8;--paper2:#ede0c4;--paper3:#e0d0b0;
+  --red:#8b2a1a;--green:#2a5a3a;
+  --mem:#120a18;--mem-border:#2a1840;--mem-accent:#8a6aaa;--mem-dim:#4a3060;
+  --display:'Playfair Display',Georgia,serif;
+  --body:'IM Fell English',Georgia,serif;
+  --type:'Special Elite',monospace;
+
+  /* Theme vars — overridden per character */
+  --th-bg:#1a0e06;
+  --th-surface:#241408;
+  --th-border:#4a3018;
+  --th-text:#f0e6d6;
+  --th-text2:#c8b090;
+  --th-text3:#8a6840;
+  --th-accent:#d4a55a;
+  --th-accent2:#a07835;
+  --th-prose-font:'IM Fell English',Georgia,serif;
+  --th-ui-font:'Special Elite',monospace;
+  --th-head-font:'Playfair Display',Georgia,serif;
+  --th-prose-size:16px;
+  --th-line-height:1.85;
+  --th-texture:none;
+}
+
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--body);display:flex;flex-direction:column}
+
+/* ── TITLE SEQUENCE ──────────────────────── */
+#screen-title{
+  position:fixed;inset:0;
+  background:#000;
+  z-index:1000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+/* The collage blooms in behind the text at the end */
+#screen-title .title-collage{
+  position:absolute;inset:0;
+  opacity:0;
+  transition:opacity 3.5s ease;
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 80%,var(--s8) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 80% at 85% 20%,var(--s7) 0%,transparent 55%),
+    radial-gradient(ellipse 100% 40% at 50% 100%,var(--s9) 0%,transparent 50%),
+    radial-gradient(ellipse 70% 70% at 70% 60%,var(--s5) 0%,transparent 55%),
+    radial-gradient(ellipse 50% 90% at 20% 30%,var(--s6) 0%,transparent 50%),
+    radial-gradient(ellipse 80% 50% at 40% 70%,var(--s4) 0%,transparent 45%),
+    radial-gradient(ellipse 60% 40% at 60% 20%,var(--s3) 0%,transparent 50%),
+    radial-gradient(ellipse 40% 60% at 90% 70%,var(--s2) 0%,transparent 45%),
+    radial-gradient(ellipse 25% 15% at 45% 15%,var(--s2) 0%,transparent 45%),
+    linear-gradient(135deg,var(--s9) 0%,var(--s7) 30%,var(--s5) 55%,var(--s3) 75%,var(--s1) 100%);
+}
+#screen-title .title-collage-vignette{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 80% at 50% 50%,transparent 10%,rgba(0,0,0,.75) 100%);
+}
+
+.title-lines{
+  position:relative;z-index:2;
+  text-align:center;
+  padding:0 40px;
+  max-width:680px;
+}
+
+.title-line{
+  display:block;
+  font-family:'Playfair Display',Georgia,serif;
+  font-style:italic;
+  font-weight:400;
+  color:var(--s1);
+  opacity:0;
+  transform:translateY(8px);
+  transition:opacity 1.2s ease, transform 1.2s ease;
+  line-height:1.4;
+  margin-bottom:0;
+}
+.title-line.visible{
+  opacity:1;
+  transform:none;
+}
+
+/* sizing — varied for rhythm */
+.title-line.size-place{
+  font-size:15px;
+  letter-spacing:6px;
+  text-transform:uppercase;
+  font-style:normal;
+  font-family:'Special Elite',monospace;
+  color:var(--s3);
+  margin-bottom:32px;
+}
+.title-line.size-large{
+  font-size:clamp(28px,4vw,46px);
+  margin-bottom:20px;
+}
+.title-line.size-medium{
+  font-size:clamp(18px,2.5vw,26px);
+  color:var(--s2);
+  margin-bottom:10px;
+}
+.title-line.size-small{
+  font-size:clamp(14px,1.8vw,18px);
+  color:var(--s3);
+  margin-bottom:8px;
+}
+.title-line.size-gap{
+  margin-bottom:36px;
+}
+.title-line.size-thesis{
+  font-size:clamp(16px,2.2vw,22px);
+  color:var(--s2);
+  margin-bottom:12px;
+}
+.title-line.size-wrong{
+  font-size:clamp(22px,3vw,34px);
+  color:var(--s1);
+  font-weight:700;
+  margin-bottom:32px;
+  letter-spacing:2px;
+}
+.title-line.size-invitation{
+  font-size:clamp(14px,1.6vw,17px);
+  color:var(--s3);
+  letter-spacing:5px;
+  text-transform:uppercase;
+  font-family:'Special Elite',monospace;
+  font-style:normal;
+  margin-top:12px;
+  cursor:pointer;
+  transition:opacity 1.2s ease, transform 1.2s ease, color .3s ease;
+}
+.title-line.size-invitation:hover{
+  color:var(--s1);
+}
+
+/* ── SKIN TONE COLLAGE (home page) ───────── */
+.collage{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 80%,var(--s8) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 80% at 85% 20%,var(--s7) 0%,transparent 55%),
+    radial-gradient(ellipse 100% 40% at 50% 100%,var(--s9) 0%,transparent 50%),
+    radial-gradient(ellipse 70% 70% at 70% 60%,var(--s5) 0%,transparent 55%),
+    radial-gradient(ellipse 50% 90% at 20% 30%,var(--s6) 0%,transparent 50%),
+    radial-gradient(ellipse 80% 50% at 40% 70%,var(--s4) 0%,transparent 45%),
+    radial-gradient(ellipse 60% 40% at 60% 20%,var(--s3) 0%,transparent 50%),
+    radial-gradient(ellipse 40% 60% at 90% 70%,var(--s2) 0%,transparent 45%),
+    radial-gradient(ellipse 30% 30% at 30% 90%,var(--s3) 0%,transparent 40%),
+    radial-gradient(ellipse 20% 20% at 75% 45%,var(--s1) 0%,transparent 50%),
+    radial-gradient(ellipse 25% 15% at 45% 15%,var(--s2) 0%,transparent 45%),
+    linear-gradient(135deg,var(--s9) 0%,var(--s7) 30%,var(--s5) 55%,var(--s3) 75%,var(--s1) 100%);
+  opacity:.9;
+}
+.collage::after{
+  content:'';position:absolute;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  opacity:.6;mix-blend-mode:multiply;
+}
+.collage-vignette{position:absolute;inset:0;background:radial-gradient(ellipse 70% 70% at 50% 50%,transparent 20%,rgba(10,5,2,.65) 100%)}
+
+/* ── SCREENS ────────────────────────────────── */
+.screen{display:none;flex:1;overflow:hidden;flex-direction:column}
+.screen.active{display:flex}
+
+/* ── HOME ────────────────────────────────────── */
+#screen-home{position:relative;overflow-y:auto}
+.home-inner{position:relative;z-index:2;max-width:720px;margin:0 auto;padding:80px 48px 100px}
+.masthead{text-align:center;border-top:3px solid var(--s2);border-bottom:1px solid var(--s2);padding:12px 0 10px;margin-bottom:8px}
+.masthead-rule{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:10px}
+.masthead-line{flex:1;height:1px;background:var(--s3);opacity:.5}
+.masthead-ornament{color:var(--s3);font-size:14px;opacity:.7}
+.home-wordmark{font-family:var(--display);font-size:72px;font-weight:700;font-style:italic;color:var(--s1);letter-spacing:4px;line-height:1;text-shadow:2px 3px 12px rgba(0,0,0,.6);margin-bottom:6px}
+.home-edition{font-family:var(--type);font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--s3)}
+.home-dateline{font-family:var(--type);font-size:9px;letter-spacing:2px;color:var(--s4);opacity:.7;text-align:center;margin-top:8px;margin-bottom:32px}
+.col-rule{display:flex;align-items:center;gap:10px;margin:28px 0}
+.col-rule-line{flex:1;height:1px;background:var(--s4);opacity:.3}
+.col-rule-diamond{width:6px;height:6px;background:var(--s3);transform:rotate(45deg);flex-shrink:0;opacity:.6}
+.home-cols{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-bottom:32px}
+.home-col-full{margin-bottom:28px}
+.home-section-head{font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--s3);margin-bottom:10px;border-bottom:1px solid rgba(212,165,90,.2);padding-bottom:6px}
+.home-body{font-family:var(--body);font-size:15px;color:rgba(240,230,214,.75);line-height:1.85}
+.home-body p{margin-bottom:.9em}
+.home-body p:last-child{margin-bottom:0}
+.home-callout{border:1px solid rgba(212,165,90,.25);padding:16px 20px;margin:20px 0;background:rgba(26,14,6,.4);font-family:var(--display);font-size:15px;font-style:italic;color:var(--s2);line-height:1.75}
+.home-start-btn{display:block;margin:40px auto 0;background:transparent;border:1px solid var(--s3);color:var(--s2);font-family:var(--type);font-size:11px;letter-spacing:4px;text-transform:uppercase;padding:14px 48px;cursor:pointer;transition:all .2s;position:relative}
+.home-start-btn::before,.home-start-btn::after{content:'◆';position:absolute;top:50%;transform:translateY(-50%);color:var(--s4);font-size:8px}
+.home-start-btn::before{left:14px}
+.home-start-btn::after{right:14px}
+.home-start-btn:hover{background:rgba(212,165,90,.1);border-color:var(--s2);color:var(--s1)}
+
+/* Sleek home — centered, minimal */
+.home-inner-sleek{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;text-align:center}
+.home-inner-sleek .masthead{border:none;margin-bottom:48px}
+.home-inner-sleek .home-wordmark{font-size:96px;margin-bottom:14px}
+.home-inner-sleek .home-edition{font-size:15px;font-style:italic;letter-spacing:1px;color:var(--s2);text-transform:none;font-family:var(--display)}
+.home-about-link{margin-top:28px;font-family:var(--type);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--s4);cursor:pointer;transition:color .2s;opacity:.7}
+.home-about-link:hover{color:var(--s2);opacity:1}
+
+/* About page */
+#screen-about{position:relative;overflow-y:auto;background:var(--bg)}
+.about-inner{position:relative;z-index:2;max-width:680px;margin:0 auto;padding:64px 48px 80px}
+.about-back{font-family:var(--type);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--s4);cursor:pointer;margin-bottom:40px;transition:color .2s}
+.about-back:hover{color:var(--s2)}
+
+/* ── NAV ──────────────────────────────────────── */
+nav{height:46px;flex-shrink:0;background:var(--th-bg);border-bottom:1px solid var(--th-border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:50;position:relative;transition:background .4s,border-color .4s}
+nav::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--th-accent),transparent);opacity:.3}
+.nav-title{font-family:var(--display);font-size:18px;font-style:italic;font-weight:700;color:var(--th-accent);cursor:pointer;letter-spacing:1px;transition:color .3s}
+.nav-title:hover{color:var(--s2)}
+.nav-right{display:flex;gap:8px;align-items:center}
+.nbtn{background:none;border:1px solid var(--th-border);color:var(--th-text3);font-family:var(--th-ui-font);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;cursor:pointer;border-radius:1px;transition:all .15s}
+.nbtn:hover{border-color:var(--th-accent2);color:var(--th-accent)}
+.nbtn.warn:hover{border-color:var(--red);color:var(--red)}
+
+/* ── PRELUDE ──────────────────────────────────── */
+#screen-prelude{overflow:hidden}
+.prelude-body{flex:1;overflow-y:auto;background:var(--bg);position:relative}
+.prelude-body::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 40% at 0% 100%,rgba(107,45,14,.25) 0%,transparent 60%),radial-gradient(ellipse 40% 60% at 100% 0%,rgba(61,28,8,.3) 0%,transparent 55%);pointer-events:none}
+.prelude-inner{max-width:580px;margin:0 auto;padding:52px 40px 40px;position:relative;z-index:1}
+.prelude-dateline{font-family:var(--type);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--gold2);margin-bottom:6px}
+.prelude-headline{font-family:var(--display);font-size:24px;font-weight:700;font-style:italic;color:var(--text);line-height:1.3;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:18px}
+.prelude-text{font-family:var(--body);font-size:17px;line-height:1.9;color:var(--text2)}
+.prelude-text p{margin-bottom:1em;text-indent:1.5em}
+.prelude-text p:first-child{text-indent:0}
+.prelude-generating{font-family:var(--type);font-size:10px;color:var(--gold2);letter-spacing:2px;margin-top:28px}
+.prelude-generating span{animation:blink 1s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.prelude-footer{flex-shrink:0;background:var(--surface);border-top:1px solid var(--border);padding:18px 40px 20px}
+.prelude-footer-head{font-family:var(--display);font-size:13px;font-style:italic;color:var(--text2);margin-bottom:14px}
+.char-pills{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.char-pill{background:var(--surface2);border:1px solid var(--border2);color:var(--text2);font-family:var(--body);font-size:13px;font-style:italic;padding:6px 14px;cursor:pointer;border-radius:1px;transition:all .15s}
+.char-pill:hover{border-color:var(--gold2);color:var(--text);background:var(--surface3)}
+.custom-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.cf-group{display:flex;flex-direction:column;gap:3px}
+.cf-label{font-family:var(--type);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--text3)}
+input[type=text]{background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--body);font-size:13px;padding:7px 11px;border-radius:1px;outline:none;transition:border-color .15s}
+input[type=text]:focus{border-color:var(--gold2)}
+input[type=text]::placeholder{color:var(--text3);font-style:italic}
+.enter-btn{background:var(--gold3);border:1px solid var(--gold2);color:var(--gold);font-family:var(--type);font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:7px 16px;cursor:pointer;border-radius:1px;transition:all .15s;white-space:nowrap}
+.enter-btn:hover{background:var(--gold2);color:var(--ink)}
+
+/* ── GAME SHELL ───────────────────────────────── */
+#screen-game{flex-direction:column}
+.game-shell{display:flex;flex:1;overflow:hidden}
+
+/* ── LEFT RAIL ────────────────────────────────── */
+.rail{width:210px;flex-shrink:0;background:var(--th-surface);border-right:1px solid var(--th-border);display:flex;flex-direction:column;overflow:hidden;transition:background .4s,border-color .4s}
+.rail-head{padding:12px 16px 10px;border-bottom:1px solid var(--th-border);flex-shrink:0;background:var(--th-bg)}
+.rail-label{font-family:var(--th-ui-font);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--th-text3);margin-bottom:2px}
+.rail-sub{font-family:var(--th-prose-font);font-size:11px;font-style:italic;color:var(--th-text3)}
+.rail-scroll{flex:1;overflow-y:auto;padding:6px 0}
+.person-row{padding:9px 16px;border-bottom:1px solid rgba(74,48,24,.4);cursor:pointer;transition:background .12s}
+.person-row:hover{background:var(--th-surface)}
+.person-row.active{background:var(--th-surface);border-left:2px solid var(--th-accent2)}
+.person-row.active .pr-name{color:var(--th-accent)}
+.pr-name{font-family:var(--th-head-font);font-size:13px;color:var(--th-text);margin-bottom:1px;line-height:1.2}
+.pr-role{font-family:var(--th-ui-font);font-size:8px;color:var(--th-text3);letter-spacing:.5px}
+.pr-beats{font-family:var(--th-ui-font);font-size:8px;color:var(--th-accent2);margin-top:3px}
+.pr-conn{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+.pr-chip{font-family:var(--th-ui-font);font-size:7px;color:var(--th-accent2);background:var(--th-bg);border:1px solid var(--th-accent2);border-radius:1px;padding:1px 5px;cursor:pointer;transition:all .12s;opacity:.7}
+.pr-chip:hover{opacity:1}
+.add-btn{margin:10px 14px;background:none;border:1px dashed var(--th-border);color:var(--th-text3);font-family:var(--th-ui-font);font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:7px;cursor:pointer;width:calc(100% - 28px);border-radius:1px;transition:all .15s}
+.add-btn:hover{border-color:var(--th-accent2);color:var(--th-accent)}
+
+/* ── CENTER ────────────────────────────────────── */
+.center-col{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--th-bg);border-right:1px solid var(--th-border);position:relative;transition:background .4s,border-color .4s}
+
+/* Theme texture overlay */
+.center-col::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.07;background-image:var(--th-texture)}
+
+.col-head{padding:10px 24px;border-bottom:1px solid var(--th-border);flex-shrink:0;background:var(--th-surface);position:relative;z-index:1;transition:background .4s,border-color .4s}
+.col-head-name{font-family:var(--th-head-font);font-size:15px;font-style:italic;color:var(--th-text)}
+.col-head-meta{font-family:var(--th-ui-font);font-size:8px;color:var(--th-accent2);margin-top:3px;letter-spacing:.5px}
+
+.thread-scroll{flex:1;overflow-y:auto;position:relative;z-index:1}
+.thread-inner{padding:20px 28px 16px;max-width:580px;position:relative}
+
+/* ── BEATS ─────────────────────────────────────── */
+.beat{border-bottom:1px solid var(--th-border);padding:16px 0;animation:fadeUp .25s ease;position:relative}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.beat.is-present{border-left:2px solid var(--th-accent2);padding-left:14px}
+.beat.is-past{opacity:.38}
+.beat-day{font-family:var(--th-ui-font);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--th-accent2);margin-bottom:7px}
+.beat-intent{font-family:var(--th-ui-font);font-size:8px;color:var(--th-text3);margin-bottom:8px;font-style:italic;letter-spacing:.3px}
+.beat-intent::before{content:'↳ ';color:var(--th-accent2)}
+.beat-prose{font-family:var(--th-prose-font);font-size:var(--th-prose-size);line-height:var(--th-line-height);color:var(--th-text2)}
+/* The bridge — threshold of stepping into a character */
+.beat.is-bridge{opacity:1}
+.bridge-marker{display:flex;align-items:center;gap:12px;margin:8px 0 18px}
+.bridge-line{flex:1;height:1px;background:var(--th-border,rgba(0,0,0,.15))}
+.bridge-label{font-family:var(--th-ui-font,var(--type));font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--th-text3);white-space:nowrap}
+.bridge-prose{font-style:italic;color:var(--th-text3)}
+.bridge-prose p{margin-bottom:14px}
+.beat-prose p{margin-bottom:.6em}
+.beat-prose p:last-child{margin-bottom:0}
+.beat-people{margin-top:12px;display:flex;flex-direction:column;gap:4px}
+.enc-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;background:var(--th-surface);border:1px solid var(--th-border);border-radius:1px}
+.enc-name{font-family:var(--th-head-font);font-size:12px;color:var(--th-text)}
+.enc-role{font-family:var(--th-ui-font);font-size:8px;color:var(--th-text3);margin-top:1px}
+.enc-traits{font-family:var(--th-prose-font);font-size:11px;font-style:italic;color:var(--th-text3);margin-top:1px}
+.jump-btn{background:none;border:1px solid var(--th-border);color:var(--th-text3);font-family:var(--th-ui-font);font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:4px 8px;cursor:pointer;border-radius:1px;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.jump-btn:hover{border-color:var(--th-accent2);color:var(--th-accent)}
+.sleep-div{padding:10px 0;font-family:var(--th-ui-font);font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--th-text3);text-align:center;border-top:1px solid var(--th-border);border-bottom:1px solid var(--th-border);margin:4px 0;background:var(--th-surface)}
+
+/* Hidden mickey container — positioned absolutely in beat */
+.hidden-mickey{position:absolute;pointer-events:none;user-select:none;transition:opacity .5s}
+
+/* ── INTENT BAR ─────────────────────────────────── */
+.intent-bar{flex-shrink:0;border-top:1px solid var(--th-border);background:var(--th-surface);padding:12px 20px;position:relative;z-index:2;transition:background .4s,border-color .4s}
+.intent-bar::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--th-accent2),transparent);opacity:.25}
+.intent-label{font-family:var(--th-ui-font);font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--th-text3);margin-bottom:8px}
+.intent-row{display:flex;gap:8px;align-items:center}
+.intent-input{flex:1;background:var(--th-bg);border:1px solid var(--th-border);color:var(--th-text);font-family:var(--th-prose-font);font-size:14px;padding:8px 12px;border-radius:1px;outline:none;transition:border-color .15s}
+.intent-input:focus{border-color:var(--th-accent2)}
+.intent-input::placeholder{color:var(--th-text3);font-style:italic}
+.intent-input:disabled{opacity:.4}
+.do-btn{background:var(--th-bg);border:1px solid var(--th-accent2);color:var(--th-accent);font-family:var(--th-ui-font);font-size:10px;letter-spacing:1px;padding:8px 14px;cursor:pointer;border-radius:1px;transition:all .15s;white-space:nowrap}
+.do-btn:hover:not(:disabled){background:var(--th-accent2);color:var(--th-bg)}
+.do-btn:disabled{opacity:.35;cursor:not-allowed}
+.aux-row{display:flex;gap:6px;margin-top:8px}
+.aux-btn{background:none;border:1px solid var(--th-border);color:var(--th-text3);font-family:var(--th-ui-font);font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:5px 10px;cursor:pointer;border-radius:1px;transition:all .15s}
+.aux-btn:hover:not(:disabled){border-color:var(--th-accent2);color:var(--th-accent)}
+.aux-btn.mem:hover:not(:disabled){border-color:var(--mem-accent);color:var(--mem-accent)}
+.aux-btn:disabled{opacity:.3;cursor:not-allowed}
+.aux-btn.skip-btn{border-color:var(--th-accent2);color:var(--th-accent2)}
+.aux-btn.skip-btn:hover:not(:disabled){background:var(--gold3);border-color:var(--th-accent);color:var(--th-accent)}
+.gen-status{font-family:var(--th-ui-font);font-size:8px;color:var(--th-accent2);letter-spacing:1px;margin-top:8px;display:none}
+.gen-status span{animation:blink 1s step-end infinite}
+.err-status{font-family:var(--th-ui-font);font-size:8px;color:var(--red);margin-top:8px;display:none}
+
+/* ── MEMORY LANE ─────────────────────────────────── */
+.mem-col{width:270px;flex-shrink:0;background:var(--mem);border-right:1px solid var(--mem-border);display:flex;flex-direction:column;overflow:hidden;transition:width .25s ease,border .25s}
+.mem-col.closed{width:0;border:none}
+.mem-head{padding:11px 16px 9px;border-bottom:1px solid var(--mem-border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;background:rgba(18,10,24,.8)}
+.mem-label{font-family:var(--type);font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--mem-dim)}
+.mem-close-btn{background:none;border:none;color:var(--mem-dim);cursor:pointer;font-size:12px;padding:0;transition:color .15s}
+.mem-close-btn:hover{color:var(--mem-accent)}
+.mem-scroll{flex:1;overflow-y:auto;padding:12px 0}
+.mem-inner{padding:0 16px 20px}
+.mem-beat{border-bottom:1px solid var(--mem-border);padding:13px 0;animation:fadeUp .25s ease}
+.mem-beat.deepest{border-left:2px solid var(--mem-accent);padding-left:10px}
+.mem-era{font-family:var(--type);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--mem-accent);margin-bottom:4px}
+.mem-title{font-family:var(--display);font-size:12px;font-weight:500;color:#c0a8d8;margin-bottom:8px;line-height:1.3}
+.mem-prose{font-family:var(--body);font-size:13px;line-height:1.8;color:#6a5878}
+.mem-prose p{margin-bottom:.65em}
+.mem-prose p:last-child{margin-bottom:0}
+.mem-footer{padding:11px 16px;border-top:1px solid var(--mem-border);flex-shrink:0;background:var(--mem)}
+.mem-depth{font-family:var(--type);font-size:8px;color:var(--mem-dim);text-align:center;margin-bottom:7px}
+.deeper-btn{width:100%;background:none;border:1px solid var(--mem-border);color:var(--mem-dim);font-family:var(--type);font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:8px;cursor:pointer;border-radius:1px;transition:all .15s}
+.deeper-btn:hover:not(:disabled){border-color:var(--mem-accent);color:var(--mem-accent)}
+.deeper-btn:disabled{opacity:.3;cursor:not-allowed}
+.mem-gen{font-family:var(--type);font-size:8px;color:var(--mem-accent);text-align:center;margin-top:7px;display:none}
+.mem-gen span{animation:blink 1s step-end infinite}
+
+/* ── RIPPLE ──────────────────────────────────────── */
+.ripple-col{width:220px;flex-shrink:0;background:var(--th-surface);display:flex;flex-direction:column;overflow:hidden;transition:background .4s}
+.ripple-scroll{flex:1;overflow-y:auto;padding:8px 0}
+.ripple-empty{padding:14px 16px;font-family:var(--body);font-size:12px;font-style:italic;color:var(--th-text3);line-height:1.6}
+.ripple-entry{padding:10px 16px;border-bottom:1px solid var(--th-border);animation:fadeUp .25s ease}
+.ripple-from{font-family:var(--th-ui-font);font-size:7px;color:var(--th-accent2);letter-spacing:.5px;margin-bottom:3px;text-transform:uppercase}
+.ripple-text{font-family:var(--body);font-size:12px;font-style:italic;color:var(--th-text2);line-height:1.5}
+.ripple-chips{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px}
+.ripple-chip{font-family:var(--th-ui-font);font-size:7px;color:var(--th-text3);background:var(--th-bg);border:1px solid var(--th-border);border-radius:1px;padding:1px 5px;cursor:pointer;transition:all .12s}
+.ripple-chip:hover{border-color:var(--th-accent2);color:var(--th-accent)}
+
+/* ── MODALS ──────────────────────────────────────── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:2px;padding:24px 28px;width:360px;max-width:90vw}
+.modal h3{font-family:var(--display);font-size:18px;font-style:italic;font-weight:400;color:var(--text);margin-bottom:8px}
+.modal p{font-family:var(--type);font-size:9px;color:var(--text3);line-height:1.6;margin-bottom:14px;letter-spacing:.3px}
+.modal-row{display:flex;gap:8px;margin-bottom:6px}
+.modal-row.col{flex-direction:column}
+.modal-ok{font-family:var(--type);font-size:9px;color:var(--green);display:none;margin-top:4px}
+.modal-foot{margin-top:16px;display:flex;justify-content:flex-end;gap:8px}
+
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+@media(max-width:1100px){.ripple-col{display:none}}
+@media(max-width:820px){.mem-col{display:none}.rail{width:180px}}
+</style>
+</head>
+<body>
+
+<!-- TITLE SEQUENCE -->
+<div id="screen-title">
+  <div class="title-collage" id="title-collage"></div>
+  <div class="title-collage-vignette"></div>
+  <div class="title-lines" id="title-lines">
+    <span class="title-line size-place" data-delay="400">New York City &nbsp;·&nbsp; October, 1937</span>
+    <span class="title-line size-large" data-delay="1600">Sixty thousand people</span>
+    <span class="title-line size-medium" data-delay="2600">are going to a baseball game.</span>
+    <span class="title-line size-small size-gap" data-delay="3800">They have families, habits, debts, opinions.</span>
+    <span class="title-line size-small" data-delay="4800">They are cold, excited, hungry, distracted.</span>
+    <span class="title-line size-small size-gap" data-delay="5800">They are completely, ordinarily alive.</span>
+    <span class="title-line size-thesis" data-delay="7400">They say you cannot escape your own perspective.</span>
+    <span class="title-line size-wrong" data-delay="9000">They're wrong.</span>
+    <span class="title-line size-medium" data-delay="10600">This is their week.</span>
+    <span class="title-line size-medium" data-delay="11400">All of them.</span>
+    <span class="title-line size-medium size-gap" data-delay="12200">At once.</span>
+    <span class="title-line size-invitation" data-delay="13800" onclick="endTitleSequence()">Come in</span>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="screen-home" class="screen active">
+  <div class="collage"></div>
+  <div class="collage-vignette"></div>
+  <div class="home-inner home-inner-sleek">
+    <div class="masthead">
+      <div class="masthead-rule"><div class="masthead-line"></div><div class="masthead-ornament">◆ ◆ ◆</div><div class="masthead-line"></div></div>
+      <div class="home-wordmark">Lateral</div>
+      <div class="home-edition">The only way forward is sideways</div>
+    </div>
+    <button class="home-start-btn" onclick="goToPrelude()">Enter the World</button>
+    <div class="home-about-link" onclick="showScreen('screen-about')">About Lateral</div>
+  </div>
+</div>
+
+<!-- ABOUT -->
+<div id="screen-about" class="screen" style="flex-direction:column">
+  <div class="collage" style="opacity:.25"></div>
+  <div class="collage-vignette"></div>
+  <div class="about-inner">
+    <div class="about-back" onclick="showScreen('screen-home')">← back</div>
+    <div class="home-wordmark" style="font-size:44px;text-align:center;margin-bottom:6px">Lateral</div>
+    <div class="home-edition" style="text-align:center;margin-bottom:40px">The only way forward is sideways</div>
+
+    <div class="home-col-full">
+      <div class="home-section-head">What This Is</div>
+      <div class="home-body">
+        <p>Lateral is a narrative game set across one week in October 1937 in New York City. The World Series is on. The whole city is paying attention to baseball. Something else is moving through the streets that nobody can quite name yet. You will not be told what to do, or what is coming. You will only be given a person to inhabit, and a week to live.</p>
+        <p>Pick anyone. A vendor. A sportswriter. A woman who came to the game alone. A boy selling programs outside the gates. Their week is waiting. None of them is more important than any other.</p>
+      </div>
+    </div>
+    <div class="home-cols">
+      <div>
+        <div class="home-section-head">How It Works</div>
+        <div class="home-body">
+          <p>The world stops and waits for you. Type what your character does — there are no menus, no options to pick from. The world responds through who they actually are.</p>
+          <p>Jump to anyone your character encounters, and live the same moment from the other side. The facts stay fixed. The experience is unrecognisable.</p>
+        </div>
+      </div>
+      <div>
+        <div class="home-section-head">Finding Things Out</div>
+        <div class="home-body">
+          <p>You can ask. People learn by asking. But ask the wrong person and you get nothing; ask the right person at the wrong moment and you get a brush-off. The truth comes partial and slanted, the way people actually give it.</p>
+          <p>Some people know things they don't know they know. The truth is distributed. It has to be earned sideways — the right question, to the right person, at the right time.</p>
+        </div>
+      </div>
+    </div>
+    <div class="home-callout">There are no minor characters. The vendor has a complete week. So does the cop walking his beat, and the child running for the streetcar. You can follow any of them. What you find depends entirely on where you look — and on whose week becomes your own.</div>
+    <div class="home-col-full" style="margin-top:8px">
+      <div class="home-section-head">Following the Current</div>
+      <div class="home-body">
+        <p>The world has a current. Each life is already in motion when you step into it, already carrying the person toward the places and people their week has in store. You don't have to do anything to feel it — the day moves on its own, gently, the way real days do.</p>
+        <p>You can swim against that current if you like. Wander off, ignore the pull, spend the week somewhere quiet. The world won't stop you, and it won't punish you. But the story is in the current. Follow it, and you'll find what this week is really about. Drift away from it, and you'll have lived an ordinary week while something extraordinary happened somewhere you weren't looking. Either is a real way to play. Only one of them shows you everything.</p>
+      </div>
+    </div>
+    <button class="home-start-btn" style="margin:8px auto 0" onclick="showScreen('screen-home')">← back</button>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav id="game-nav" style="display:none;flex-shrink:0">
+  <div class="nav-title" onclick="goHome()">Lateral</div>
+  <div class="nav-right">
+    <button class="nbtn" id="tts-btn" onclick="toggleTTS()" style="display:none">▶ aloud</button>
+    <button class="nbtn warn" onclick="resetWorld()">reset</button>
+    <button class="nbtn" onclick="openSettings()">api key</button>
+  </div>
+</nav>
+
+<!-- PRELUDE -->
+<div id="screen-prelude" class="screen" style="flex-direction:column">
+  <div class="prelude-body">
+    <div class="prelude-inner">
+      <div class="prelude-dateline">Tuesday, October 5, 1937 &nbsp;·&nbsp; New York City</div>
+      <div class="prelude-headline">One game from the end</div>
+      <div class="prelude-text" id="prelude-text">
+        <div class="prelude-generating" id="prelude-gen">Setting the scene<span>...</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="prelude-footer">
+    <div class="prelude-footer-head" id="prelude-footer-head" style="display:none">It isn't about where you begin, or when. It's about who you begin with.</div>
+    <div class="char-pills" id="char-pills" style="display:none">
+      <button class="char-pill" onclick="beginWith('Sal Benedetti','a peanut vendor, twenty years working the stadium')">Sal, who sells peanuts at the stadium</button>
+      <button class="char-pill" onclick="beginWith('Danny Maguire','an NYPD patrolman, recently reassigned')">Danny, a patrolman just transferred in</button>
+      <button class="char-pill" onclick="beginWith('Ruth Kessler','a widow who lives alone in the Bronx')">Ruth, a widow who lives alone</button>
+      <button class="char-pill" onclick="beginWith('the boy who sells programs','age twelve, works the gates on game days')">the boy who sells programs at the gate</button>
+      <button class="char-pill" onclick="beginWith('Walter Fitch','a sportswriter for the Daily Mirror covering the Series')">Walter, a sportswriter chasing the Series</button>
+      <button class="char-pill" onclick="beginWith('Clara Novak','a seamstress in a garment shop on Orchard Street')">Clara, a seamstress on Orchard Street</button>
+      <button class="char-pill" onclick="beginWith('Heinrich Vogel','a German-American businessman with box seats')">Heinrich, a businessman with box seats</button>
+      <button class="char-pill" onclick="beginWith('Mae Sullivan','a waitress at a diner near the stadium')">Mae, a waitress near the ballpark</button>
+    </div>
+    <div class="custom-row" id="custom-row" style="display:none">
+      <div class="cf-group">
+        <div class="cf-label">Or enter anyone</div>
+        <input type="text" id="custom-name" placeholder="e.g. the nurse who was in the crowd" style="width:230px">
+      </div>
+      <div class="cf-group">
+        <div class="cf-label">Their place</div>
+        <input type="text" id="custom-role" placeholder="e.g. saw it from the bleachers" style="width:160px">
+      </div>
+      <button class="enter-btn" onclick="beginCustom()">Enter →</button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="screen-game" class="screen" style="flex-direction:column">
+  <div class="game-shell">
+    <div class="rail">
+      <div class="rail-head">
+        <div class="rail-label">Threads</div>
+        <div class="rail-sub">each a whole week</div>
+      </div>
+      <div class="rail-scroll" id="rail-scroll">
+        <div id="rail-empty" style="padding:12px 16px;font-family:var(--type);font-size:9px;color:var(--text3);line-height:1.6;letter-spacing:.5px">No one yet.</div>
+      </div>
+      <button class="add-btn" onclick="openAddModal()">+ new perspective</button>
+    </div>
+
+    <div class="center-col">
+      <div class="col-head" id="col-head" style="display:none">
+        <div class="col-head-name" id="col-head-name"></div>
+        <div class="col-head-meta" id="col-head-meta"></div>
+      </div>
+      <div class="thread-scroll" id="thread-scroll">
+        <div class="thread-inner" id="thread-inner">
+          <div id="no-sel" style="display:none;padding:20px 0;font-family:var(--body);font-size:14px;font-style:italic;color:var(--text3);line-height:1.7">Select a perspective from the left.</div>
+          <div id="beats-container"></div>
+        </div>
+      </div>
+      <div class="intent-bar" id="intent-bar" style="display:none">
+        <div class="intent-label">What does <span id="intent-name"></span> do? <span style="opacity:.5;font-style:italic">leave blank to let the world decide</span></div>
+        <div class="intent-row">
+          <input type="text" class="intent-input" id="intent-input" placeholder="anything — they will attempt it">
+          <button class="do-btn" id="do-btn" onclick="sendIntent()">→</button>
+        </div>
+        <div class="aux-row">
+          <button class="aux-btn" id="btn-back" onclick="moveBack()">← earlier</button>
+          <button class="aux-btn mem" id="btn-mem" onclick="surfaceMemory()">↺ memory</button>
+          <button class="aux-btn skip-btn" id="btn-skip" onclick="openSkipModal()">⏩ skip ahead</button>
+        </div>
+        <div class="gen-status" id="gen-status">in the thread<span>...</span></div>
+        <div class="err-status" id="err-status"></div>
+      </div>
+    </div>
+
+    <div class="mem-col closed" id="mem-col">
+      <div class="mem-head">
+        <div class="mem-label">Memory</div>
+        <button class="mem-close-btn" onclick="closeMemLane()">✕</button>
+      </div>
+      <div class="mem-scroll"><div class="mem-inner" id="mem-inner"></div></div>
+      <div class="mem-footer">
+        <div class="mem-depth" id="mem-depth"></div>
+        <button class="deeper-btn" id="deeper-btn" onclick="goDeeper()">go deeper ↓</button>
+        <div class="mem-gen" id="mem-gen">descending<span>...</span></div>
+      </div>
+    </div>
+
+    <div class="ripple-col">
+      <div class="col-head" style="display:block">
+        <div class="col-head-name" style="font-size:13px;font-style:italic;font-family:var(--display);color:var(--th-text)">Ripples</div>
+        <div class="col-head-meta">how choices touch others</div>
+      </div>
+      <div class="ripple-scroll" id="ripple-scroll">
+        <div class="ripple-empty" id="ripple-empty">No ripples yet.<br><br>When a decision creates a fact that touches another character's world, it appears here.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SKIP AHEAD MODAL -->
+<div class="modal-bg" id="skip-modal">
+  <div class="modal">
+    <h3>Skip ahead</h3>
+    <p>Describe a span of time or activity. The AI will generate 3 beats covering that ground and drop you at the end. You can still go back and read each one.</p>
+    <div class="modal-row">
+      <input type="text" id="skip-input" placeholder="e.g. he spends the morning looking for Vogel" style="flex:1">
+    </div>
+    <div class="modal-foot">
+      <button class="nbtn" onclick="closeSkipModal()">cancel</button>
+      <button class="enter-btn" onclick="confirmSkip()">Skip →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-bg" id="settings-modal">
+  <div class="modal">
+    <h3>API Key</h3>
+    <p>Your OpenAI key. Stored only in this browser.</p>
+    <div class="modal-row"><input type="text" id="api-field" placeholder="sk-..." style="flex:1"><button class="enter-btn" onclick="saveKey()">Save</button></div>
+    <div class="modal-ok" id="key-ok">Saved.</div>
+    <div class="modal-foot"><button class="nbtn" onclick="closeSettings()">close</button></div>
+  </div>
+</div>
+<div class="modal-bg" id="add-modal">
+  <div class="modal">
+    <h3>New perspective</h3>
+    <p>Anyone in or around this week in October 1937.</p>
+    <div class="modal-row col">
+      <div class="cf-group"><div class="cf-label">Who</div><input type="text" id="add-name" placeholder="e.g. the usher in the upper deck" style="width:100%"></div>
+      <div class="cf-group" style="margin-top:8px"><div class="cf-label">Their place</div><input type="text" id="add-role" placeholder="e.g. been here thirty years" style="width:100%"></div>
+    </div>
+    <div class="modal-foot"><button class="nbtn" onclick="closeAddModal()">cancel</button><button class="enter-btn" onclick="confirmAdd()">Enter →</button></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+// WORLD ANCHORS
+// ══════════════════════════════════════════════════
+const ANCHORS=`FIXED WORLD FACTS — never contradict these:
+SETTING: New York City, October 1937. The World Series between the Yankees and the Giants. Going into Tuesday, the Yankees lead the series 3 games to 2. Game 6 is Tuesday night. If the Giants win Game 6, Game 7 is Thursday. The whole city is watching.
+THE WEEK: Tuesday through Sunday. Three phases:
+ - BUILDUP (Tuesday–Wednesday, around Game 6): Something is being set in motion in the city. The German-American Bund is moving pieces — recruiting, paying, repositioning. Cops are hearing whispers and don't trust them. Reporters smell something but can't name it. A vendor takes a delivery that feels wrong. A patrolman is reassigned to a specific gate by a captain's order that doesn't make sense. The tension is real but unnamed. First-time players have NO IDEA what is coming. The AI never names it explicitly in the buildup phase.
+ - THE FRACTURE (Thursday, Game 7, seventh inning): The Bund storms the field during Game 7 in a coordinated demonstration. An NYPD patrolman, Danny Maguire, shoots one of the demonstrators dead on the field. The game is abandoned. The Series ends with no champion. The crowd scatters into the city carrying what they saw.
+ - AFTERMATH (Friday–Sunday): The fallout. The cover-up is active. The letter is moving. The gun must be hidden. The dead man is being turned into a martyr by the press and the Bund. Bund membership surges nationally within days.
+THE SECRET (known to almost no one, never confirmed in prose until earned laterally): The shooting was a false flag. The dead man volunteered to die. Maguire was selected and positioned because he was known to have a short temper. The death was engineered to create a martyr.
+THE LETTER: The dead man carried a letter addressed to the Führer, to be delivered after his martyrdom. It exists. It passes through hands across the week. Some who touch it before Thursday do not know what it is. Some who touch it after Thursday do.
+THE GUN: The pistol Maguire fired — or a second weapon from the demonstration — must be hidden, moved, or disposed of during the aftermath. Whoever ends up holding it is in danger.
+THE STADIUM AS GRAVITY WELL: The stadium is where the story happens. Most preset characters have authentic reasons to be there or near it during the week — vendors, cops, reporters, ticket-holders. Players are free to wander away into other parts of the city, but the story is at the stadium. A character who leaves it lives a quieter, smaller week. That is a valid choice and the AI honors it without judgment — it simply writes that smaller week honestly.
+CHARACTER TIERS:
+ - CONSPIRACY TIER: characters who touch a piece of it — a weapon, the letter, dangerous knowledge, a paid silence, a wrong delivery. Their week is active danger or active complicity (often unknowing). Their buildup is when they get drawn in. (e.g. Sal Benedetti, Danny Maguire, Heinrich Vogel, Walter Fitch.)
+ - BLAST-RADIUS TIER: ordinary people the conspiracy did not hand a secret — a child, a neighbour, a waitress. Their week is shaped by the city's tension but they are not in the plot. Their week is interesting WITHOUT a fake spy subplot. Never invent one for them. Their mayhem is domestic, emotional, real.
+RULE: Every character's week is shaped by what is happening in the city. No character's week is empty. But only conspiracy-tier characters touch the plot directly.
+UNINTENDED COMPLICITY: A central possibility of the game is that a player, acting innocently, does something that turns out to have served the demonstration. A vendor delivers a crate without asking what is in it. A seamstress alters a coat without thinking about the armband. A cop accepts a transfer without questioning why. The AI weaves these opportunities into buildup beats so that — by Thursday or in the aftermath — the player can discover, with a sinking feeling, that they were part of it. This is one of the most powerful experiences the game can offer. Never label it. Let it land as consequence.
+THE GERMAN-AMERICAN COMMUNITY — HANDLE WITH CARE AND ACCURACY: The German-American Bund was a small, fringe, widely-despised movement. It did NOT represent German-Americans, the overwhelming majority of whom wanted nothing to do with it. CRITICAL RULES: (1) The conspiracy is a tiny cell of specific individuals, never "the Germans" or "the German neighborhood." (2) German-American characters must span the real human range — many are refugees who FLED Nazi Germany precisely to escape this, some are Jewish refugees, many are appalled by the Bund and ashamed to be associated with it, some are simply ordinary New Yorkers who happen to be German. (3) NEVER write the German neighborhood as a nest of conspirators, never imply ethnicity equals sympathy, never make a German character sinister BECAUSE they are German. (4) The rare actual Bund member is an individual making an individual choice, surrounded by a community that largely rejects him. Collapsing an ethnic community into a villain is both historically false and harmful. Hold this line strictly.
+CHARACTERS ESTABLISHED: Ruth Kessler (Jewish widow, has tickets to Game 7), Danny Maguire (NYPD patrolman — will be the shooter Thursday), Sal Benedetti (peanut vendor, twenty years on the job), Heinrich Vogel (German-American businessman, quietly sympathetic to the Bund — but an outlier among the German-Americans around him, many of whom despise it), Walter Fitch (sportswriter, Daily Mirror, covering the Series), Clara Novak (seamstress, won her Game 7 ticket in a raffle).`;
+
+// ══════════════════════════════════════════════════
+// THEME SEED EXAMPLES — AI uses these as reference
+// ══════════════════════════════════════════════════
+const THEME_SEEDS=`
+THEME EXAMPLES — use these as reference for the style and specificity required:
+
+ARCHETYPE: Law enforcement / cop
+THEME: {
+  "concept": "NYPD case report, carbon copy paper",
+  "bgColor": "#f2ede0",
+  "surfaceColor": "#ede8d5",
+  "borderColor": "#c8b89a",
+  "textColor": "#1a1410",
+  "text2Color": "#4a3e2e",
+  "text3Color": "#8a7a60",
+  "accentColor": "#8b2a1a",
+  "accent2Color": "#6a2010",
+  "proseFont": "'Courier Prime', monospace",
+  "uiFont": "'Special Elite', monospace",
+  "headFont": "'Special Elite', monospace",
+  "proseSizePx": 14,
+  "lineHeight": 1.7,
+  "textureName": "carbon",
+  "hiddenMickey": "A case number in the top-right corner of each beat. The numbers are sequential and official at first — then, as the week wears on, they stop being filled in.",
+  "mickeySelector": "beat-corner-number",
+  "mickeyProgression": "sequential_then_missing_thursday"
+}
+
+ARCHETYPE: Journalist / sportswriter
+THEME: {
+  "concept": "Broadsheet newspaper column, newsprint",
+  "bgColor": "#f0e8d0",
+  "surfaceColor": "#e8dfc4",
+  "borderColor": "#b0a080",
+  "textColor": "#0a0a08",
+  "text2Color": "#2a2820",
+  "text3Color": "#6a6050",
+  "accentColor": "#1a3a6a",
+  "accent2Color": "#0a2a5a",
+  "proseFont": "'Libre Baskerville', serif",
+  "uiFont": "'Special Elite', monospace",
+  "headFont": "'Playfair Display', serif",
+  "proseSizePx": 15,
+  "lineHeight": 1.8,
+  "textureName": "newsprint",
+  "hiddenMickey": "Score updates in the far margin — the Game 7 score the writer cannot stop re-litigating. It drifts wrong as the week pulls him away from the game, until it goes blank.",
+  "mickeySelector": "beat-score-margin",
+  "mickeyProgression": "score_drift"
+}
+
+ARCHETYPE: Working class vendor / laborer
+THEME: {
+  "concept": "Carbon copy receipt pad, pencil on rough paper",
+  "bgColor": "#f5f0e4",
+  "surfaceColor": "#ede8d8",
+  "borderColor": "#b8a888",
+  "textColor": "#1a1610",
+  "text2Color": "#3a3228",
+  "text3Color": "#7a6e58",
+  "accentColor": "#5a4a20",
+  "accent2Color": "#4a3a18",
+  "proseFont": "'Courier Prime', monospace",
+  "uiFont": "'Special Elite', monospace",
+  "headFont": "'Special Elite', monospace",
+  "proseSizePx": 14,
+  "lineHeight": 1.75,
+  "textureName": "receipt",
+  "hiddenMickey": "A tally in the bottom-right of each beat — units sold that day. The numbers are plausible early in the week. As the days wear on the count falls apart, then stops.",
+  "mickeySelector": "beat-tally",
+  "mickeyProgression": "tally_stops_thursday"
+}
+
+ARCHETYPE: Civilian woman / personal correspondence
+THEME: {
+  "concept": "Personal letter on cream stationery, fountain pen",
+  "bgColor": "#faf4e8",
+  "surfaceColor": "#f2ecd8",
+  "borderColor": "#c8b898",
+  "textColor": "#1e1810",
+  "text2Color": "#3e3428",
+  "text3Color": "#7e7060",
+  "accentColor": "#6a4a3a",
+  "accent2Color": "#5a3a2a",
+  "proseFont": "'IM Fell English', serif",
+  "uiFont": "'Special Elite', monospace",
+  "headFont": "'Playfair Display', serif",
+  "proseSizePx": 16,
+  "lineHeight": 1.9,
+  "textureName": "stationery",
+  "hiddenMickey": "A faint ink smear at the left edge of each beat — as if the writer is left-handed and drags her hand across. The smear grows slightly heavier with every passing day.",
+  "mickeySelector": "beat-ink-smear",
+  "mickeyProgression": "smear_intensifies"
+}
+
+ARCHETYPE: German-American / Bund adjacent / businessman
+THEME: {
+  "concept": "Formal German correspondence, cold precision",
+  "bgColor": "#e8e4d8",
+  "surfaceColor": "#e0dcc8",
+  "borderColor": "#909080",
+  "textColor": "#0a0c10",
+  "text2Color": "#2a2c30",
+  "text3Color": "#606270",
+  "accentColor": "#1a2a4a",
+  "accent2Color": "#0a1a3a",
+  "proseFont": "'Libre Baskerville', serif",
+  "uiFont": "'Special Elite', monospace",
+  "headFont": "'Playfair Display', serif",
+  "proseSizePx": 15,
+  "lineHeight": 1.75,
+  "textureName": "formal",
+  "hiddenMickey": "A hairline border around each beat, perfectly regular at first — then, once the week goes deep, one corner is fractionally misaligned. The break is always the same corner.",
+  "mickeySelector": "beat-formal-border",
+  "mickeyProgression": "border_breaks_thursday"
+}`;
+
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+let W={chars:[],beats:{},memories:{},facts:[],ripples:[],connections:{},prelude:'',clockDay:'Tuesday',clockPeriod:'morning'};
+// char: {id,name,role,traits,appearedIn,activeIndex,stamina,currentDay,currentPeriod,lastSyncedTo,theme}
+// theme: {concept,bgColor,surfaceColor,borderColor,textColor,text2Color,text3Color,
+//         accentColor,accent2Color,proseFont,uiFont,headFont,proseSizePx,lineHeight,
+//         textureName,hiddenMickey,mickeySelector,mickeyProgression}
+// WORLD CLOCK: one shared tide. clockDay+clockPeriod is the furthest-forward moment anyone has reached.
+// Whoever the player leads pushes it forward. It never runs backward. When the player drops into a
+// character who is behind the tide, a bridge passage catches them up to clockDay/clockPeriod.
+
+const DAYS=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const PERIODS=['morning','afternoon','evening','night'];
+// Absolute ordering index for a day+period, so two moments can be compared.
+function clockIndex(day,period){
+  const d=DAYS.indexOf(day); const p=PERIODS.indexOf(period||'morning');
+  return (d<0?1:d)*4+(p<0?0:p);
+}
+// Parse a free-text dayLabel from the AI (e.g. "Wednesday afternoon", "Tuesday, dusk") into {day,period}.
+function parseClock(label,fallbackDay,fallbackPeriod){
+  const t=(label||'').toLowerCase();
+  let day=fallbackDay||'Tuesday';
+  for(const d of DAYS){ if(t.includes(d.toLowerCase())){day=d;break;} }
+  let period=fallbackPeriod||'morning';
+  if(/night|midnight|late/.test(t))period='night';
+  else if(/evening|dusk|sunset|dinner/.test(t))period='evening';
+  else if(/afternoon|noon|midday|lunch/.test(t))period='afternoon';
+  else if(/morning|dawn|sunrise|breakfast/.test(t))period='morning';
+  return {day,period};
+}
+// Advance the world clock to at least the given moment (never backward).
+function advanceWorldClock(day,period){
+  if(clockIndex(day,period)>clockIndex(W.clockDay,W.clockPeriod)){
+    W.clockDay=day; W.clockPeriod=period;
+  }
+}
+function worldClockLabel(){return `${W.clockDay} ${W.clockPeriod}`;}
+
+let activeId=null,isGen=false,isMemGen=false,ttsActive=false;
+const uid=()=>'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const load=()=>{const s=localStorage.getItem('lateral_v7');if(s)try{W=JSON.parse(s)}catch(e){}migrateFacts();migrateNaming();};
+const save=()=>localStorage.setItem('lateral_v7',JSON.stringify(W));
+const esc=s=>typeof s!=='string'?'':s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+// ══════════════════════════════════════════════════
+// THEME ENGINE
+// ══════════════════════════════════════════════════
+function applyTheme(theme){
+  if(!theme) return resetTheme();
+  const r=document.documentElement.style;
+  r.setProperty('--th-bg', theme.bgColor||'#1a0e06');
+  r.setProperty('--th-surface', theme.surfaceColor||'#241408');
+  r.setProperty('--th-border', theme.borderColor||'#4a3018');
+  r.setProperty('--th-text', theme.textColor||'#f0e6d6');
+  r.setProperty('--th-text2', theme.text2Color||'#c8b090');
+  r.setProperty('--th-text3', theme.text3Color||'#8a6840');
+  r.setProperty('--th-accent', theme.accentColor||'#d4a55a');
+  r.setProperty('--th-accent2', theme.accent2Color||'#a07835');
+  r.setProperty('--th-prose-font', theme.proseFont||"'IM Fell English',Georgia,serif");
+  r.setProperty('--th-ui-font', theme.uiFont||"'Special Elite',monospace");
+  r.setProperty('--th-head-font', theme.headFont||"'Playfair Display',Georgia,serif");
+  r.setProperty('--th-prose-size', (theme.proseSizePx||16)+'px');
+  r.setProperty('--th-line-height', theme.lineHeight||1.85);
+  r.setProperty('--th-texture', textureCSS(theme.textureName));
+}
+
+function resetTheme(){
+  const r=document.documentElement.style;
+  r.setProperty('--th-bg','#1a0e06');
+  r.setProperty('--th-surface','#241408');
+  r.setProperty('--th-border','#4a3018');
+  r.setProperty('--th-text','#f0e6d6');
+  r.setProperty('--th-text2','#c8b090');
+  r.setProperty('--th-text3','#8a6840');
+  r.setProperty('--th-accent','#d4a55a');
+  r.setProperty('--th-accent2','#a07835');
+  r.setProperty('--th-prose-font',"'IM Fell English',Georgia,serif");
+  r.setProperty('--th-ui-font',"'Special Elite',monospace");
+  r.setProperty('--th-head-font',"'Playfair Display',Georgia,serif");
+  r.setProperty('--th-prose-size','16px');
+  r.setProperty('--th-line-height','1.85');
+  r.setProperty('--th-texture','none');
+}
+
+function textureCSS(name){
+  const t={
+    carbon:`repeating-linear-gradient(0deg,transparent,transparent 23px,rgba(0,0,0,.08) 23px,rgba(0,0,0,.08) 24px)`,
+    newsprint:`url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.12'/%3E%3C/svg%3E")`,
+    receipt:`repeating-linear-gradient(0deg,transparent,transparent 19px,rgba(0,0,0,.06) 19px,rgba(0,0,0,.06) 20px)`,
+    stationery:`repeating-linear-gradient(0deg,transparent,transparent 27px,rgba(100,80,60,.06) 27px,rgba(100,80,60,.06) 28px)`,
+    formal:`none`,
+  };
+  return t[name]||'none';
+}
+
+// Hidden mickey renderer
+function renderHiddenMickey(beat, beatIndex, theme, container){
+  if(!theme||!theme.mickeyProgression) return;
+  const prog=theme.mickeyProgression;
+  // "deep" — how far into the aftermath week. The further in, the more the
+  // character is coming apart, and the more the mickey shows it.
+  const deep = beatIndex>=5;
+  let el=null;
+
+  if(prog==='sequential_then_missing_thursday'){
+    // Case numbers — sequential and official, then they stop being filled in
+    el=document.createElement('div');
+    el.className='hidden-mickey';
+    el.style.cssText='position:absolute;top:12px;right:0;font-family:var(--th-ui-font);font-size:8px;color:var(--th-text3);opacity:0.35;letter-spacing:1px';
+    el.textContent=deep?'RPT-————':('RPT-'+(1000+beatIndex));
+  }
+  else if(prog==='score_drift'){
+    // A sportswriter's margin — the Game 7 score he can't stop re-litigating,
+    // drifting wrong as the week pulls him away from the game he came to cover
+    const scores=['NYY 3 — NYG 2','NYY 4 — NYG 3','NYY 2 — NYG 5','NYY 1 — NYG —','— — — —'];
+    el=document.createElement('div');
+    el.className='hidden-mickey';
+    el.style.cssText='position:absolute;top:50%;right:0;transform:translateY(-50%);font-family:var(--th-ui-font);font-size:7px;color:var(--th-text3);opacity:0.28;writing-mode:vertical-rl;letter-spacing:1px;white-space:nowrap';
+    el.textContent=scores[Math.min(beatIndex,scores.length-1)];
+  }
+  else if(prog==='tally_stops_thursday'){
+    // A vendor's tally — plausible at first, then the count falls apart
+    el=document.createElement('div');
+    el.className='hidden-mickey';
+    el.style.cssText='position:absolute;bottom:14px;right:0;font-family:var(--th-ui-font);font-size:8px;color:var(--th-text3);opacity:0.3;letter-spacing:1px';
+    el.textContent=deep?'—— sold':((18+beatIndex*7)+' sold');
+  }
+  else if(prog==='smear_intensifies'){
+    // An ink smear that grows heavier as the week wears the writer down
+    el=document.createElement('div');
+    el.className='hidden-mickey';
+    el.style.cssText=`position:absolute;top:0;bottom:0;left:-14px;width:${3+beatIndex*1.5}px;background:linear-gradient(to right,rgba(80,60,40,${0.04+beatIndex*0.02}),transparent);pointer-events:none`;
+  }
+  else if(prog==='border_breaks_thursday'){
+    // A border that holds, then cracks once the week goes deep
+    el=document.createElement('div');
+    el.className='hidden-mickey';
+    if(deep){
+      el.style.cssText='position:absolute;inset:-1px;border:1px solid var(--th-border);pointer-events:none';
+      const br=document.createElement('div');
+      br.style.cssText='position:absolute;top:-2px;right:-2px;width:12px;height:12px;background:var(--th-bg);transform:rotate(2deg)';
+      el.appendChild(br);
+    }
+  }
+
+  if(el) container.appendChild(el);
+}
+
+// ══════════════════════════════════════════════════
+// GENERATE THEME (called once per new character)
+// ══════════════════════════════════════════════════
+async function generateTheme(char){
+  const apiKey=localStorage.getItem('lateral_apikey');
+  if(!apiKey) return null;
+
+  const sys=`You are designing the visual theme for a character's storyline in a 1937 narrative game. Each character gets a unique interface aesthetic that reflects who they are — their class, their job, their relationship to the world. The interface should feel like the documents, forms, or materials that would be native to their life.
+
+${THEME_SEEDS}
+
+Design a theme for the character described. Be specific and original. The hidden mickey must be subtle — something a careful player might notice only after several beats. It should DEGRADE or DRIFT as the week wears on — the deeper into the aftermath, the more it quietly comes apart, mirroring the character.
+
+OUTPUT valid JSON only — exact same shape as the examples:
+{
+  "concept": "string (one phrase)",
+  "bgColor": "string (hex)",
+  "surfaceColor": "string (hex)",
+  "borderColor": "string (hex)",
+  "textColor": "string (hex)",
+  "text2Color": "string (hex)",
+  "text3Color": "string (hex)",
+  "accentColor": "string (hex)",
+  "accent2Color": "string (hex)",
+  "proseFont": "string (CSS font stack — use only: 'Courier Prime', 'IM Fell English', 'Special Elite', 'Playfair Display', 'Libre Baskerville', 'Caveat')",
+  "uiFont": "string",
+  "headFont": "string",
+  "proseSizePx": number,
+  "lineHeight": number,
+  "textureName": "string (one of: carbon, newsprint, receipt, stationery, formal)",
+  "hiddenMickey": "string (describe the detail in one sentence)",
+  "mickeySelector": "string (a short css-class-style name)",
+  "mickeyProgression": "string (one of: sequential_then_missing_thursday, score_drift, tally_stops_thursday, smear_intensifies, border_breaks_thursday)"
+}`;
+
+  const user=`CHARACTER: ${char.name}\nROLE: ${char.role}\nTRAITS: ${char.traits&&char.traits.length?char.traits.join(', '):'unknown yet'}\nSETTING: 1937 New York, the week after the stadium shooting`;
+
+  try{
+    const res=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+      body:JSON.stringify({
+        model:'gpt-4o',
+        messages:[{role:'system',content:sys},{role:'user',content:user}],
+        temperature:0.85,
+        max_tokens:900,
+        response_format:{type:"json_object"}
+      })
+    });
+    const data=await res.json();
+    if(data.error) throw new Error(data.error.message);
+    let raw=data.choices?.[0]?.message?.content||'';
+    raw=raw.replace(/```json|```/g,'').trim();
+    // Salvage: if extra prose surrounds the JSON, extract the object
+    if(raw && raw[0]!=='{'){
+      const s=raw.indexOf('{'), e=raw.lastIndexOf('}');
+      if(s>=0&&e>s) raw=raw.slice(s,e+1);
+    }
+    const theme=JSON.parse(raw);
+    // Validate it has the essential fields; if not, treat as failure
+    if(!theme||!theme.bgColor||!theme.proseFont) throw new Error('incomplete theme');
+    return theme;
+  }catch(e){
+    console.warn('Theme generation failed:',e.message);
+    // Show a quiet, non-blocking notice instead of failing silently
+    const es=document.getElementById('err-status');
+    if(es){es.style.display='block';es.textContent='Theme couldn\u2019t be generated ('+e.message+') — using default look. The story still works.';setTimeout(()=>{if(es)es.style.display='none';},5000);}
+    return null;
+  }
+}
+
+// ══════════════════════════════════════════════════
+// SCREENS
+// ══════════════════════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('game-nav').style.display=(id==='screen-home'||id==='screen-about')?'none':'flex';
+  if(id==='screen-home'||id==='screen-about') resetTheme();
+}
+
+function goHome(){
+  if(W.chars.length>0) showScreen('screen-game');
+  else showScreen('screen-home');
+}
+
+function goToPrelude(){
+  load();
+  if(W.chars.length>0){
+    showScreen('screen-game');
+    renderRail();renderRipples();selectChar(W.chars[0].id);return;
+  }
+  showScreen('screen-prelude');
+  if(W.prelude) renderPrelude(W.prelude);
+  else generatePrelude();
+}
+
+// ══════════════════════════════════════════════════
+// PRELUDE
+// ══════════════════════════════════════════════════
+async function generatePrelude(){
+  const apiKey=localStorage.getItem('lateral_apikey');
+  if(!apiKey){openSettings();return;}
+  try{
+    const res=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+      body:JSON.stringify({model:'gpt-4o',messages:[{role:'user',content:`Write the OPENING SCENE for a narrative game set in New York City, Tuesday morning, October 1937. The World Series is on — Yankees vs Giants, the Yankees lead 3 games to 2, Game 6 is tonight. The whole city is bending toward the game. Present tense, sensory, specific, WARM. This is an ordinary, alive, exciting baseball morning — nothing ominous, no tension, no politics, no foreshadowing.
+
+Move through the waking city and GLIMPSE, for a sentence or two each, several ordinary people — do NOT name them, just show them mid-life so they feel real and recognizable:
+- an old peanut vendor stacking his sacks, twenty years working the ballpark
+- a patrolman walking a corner that isn't his usual beat, recently transferred in
+- a widow alone at a Bronx window with her coffee
+- a boy at the stadium gates with an armful of programs
+- a sportswriter hunched over a typewriter, chasing the Series
+- a seamstress at her machine in a garment shop on Orchard Street
+- a man in a good coat with box seats to tonight's game
+- a waitress wiping the counter of a diner near the ballpark as the breakfast rush thins
+
+Keep each glimpse BRIEF and concrete — a gesture, an object, a scrap of talk — never a full portrait. Let them blur back into the crowd. End on a single warm image of the city carrying itself toward first pitch. FOUR short paragraphs. Prose only, paragraphs separated by blank lines. Do NOT mention Germans-as-ominous, danger, a shooting, a demonstration, or anything dark. Do NOT foreshadow.`}],temperature:0.9,max_tokens:600})
+    });
+    const data=await res.json();
+    if(data.error) throw new Error(data.error.message);
+    W.prelude=data.choices?.[0]?.message?.content||'';
+    save();renderPrelude(W.prelude);
+  }catch(err){
+    document.getElementById('prelude-text').innerHTML=`<div style="font-family:var(--type);font-size:9px;color:var(--red)">Error: ${esc(err.message)}</div>`;
+    showCharPicker();
+  }
+}
+
+function renderPrelude(text){
+  document.getElementById('prelude-gen').style.display='none';
+  const paras=text.split(/\n+/).filter(p=>p.trim());
+  document.getElementById('prelude-text').innerHTML=paras.map(p=>`<p>${esc(p)}</p>`).join('');
+  setTimeout(showCharPicker,300);
+}
+
+function showCharPicker(){
+  document.getElementById('prelude-footer-head').style.display='block';
+  document.getElementById('char-pills').style.display='flex';
+  document.getElementById('custom-row').style.display='flex';
+}
+
+// ══════════════════════════════════════════════════
+// CHARACTER
+// ══════════════════════════════════════════════════
+function addChar(name,role,traits,appearedIn){
+  const ex=W.chars.find(c=>c.name.toLowerCase()===name.toLowerCase());
+  if(ex) return ex.id;
+  const id=uid();
+  W.chars.push({id,name,role:role||'',traits:traits||[],appearedIn:appearedIn||null,activeIndex:0,stamina:0,currentDay:'Tuesday',currentPeriod:'morning',lastSyncedTo:0,theme:null,
+    realName:name,        // the true name, known to themselves
+    knownAs:{},           // map: otherCharId -> what THIS character calls them (label or real name)
+    nameKnown:{}          // map: otherCharId -> bool, has THIS character earned the other's real name
+  });
+  W.beats[id]=[];W.memories[id]=[];W.connections[id]=[];
+  save();return id;
+}
+
+// Returns what `viewerId` currently calls the person with id `targetId`.
+// If the viewer has earned/known the real name, returns it. Otherwise the perspective label. Falls back to real name.
+function displayNameFor(viewerId,targetId){
+  const target=W.chars.find(c=>c.id===targetId);
+  if(!target) return '';
+  if(viewerId===targetId) return target.realName||target.name;
+  const viewer=W.chars.find(c=>c.id===viewerId);
+  if(viewer){
+    if(viewer.nameKnown&&viewer.nameKnown[targetId]) return target.realName||target.name;
+    if(viewer.knownAs&&viewer.knownAs[targetId]) return viewer.knownAs[targetId];
+  }
+  return target.realName||target.name;
+}
+
+// Record that `viewerId` perceives `targetId` under a label (not yet their real name).
+function setLabel(viewerId,targetId,label){
+  const viewer=W.chars.find(c=>c.id===viewerId);
+  if(!viewer||!label) return;
+  if(!viewer.knownAs) viewer.knownAs={};
+  if(!viewer.nameKnown) viewer.nameKnown={};
+  // don't overwrite an already-earned real name
+  if(viewer.nameKnown[targetId]) return;
+  viewer.knownAs[targetId]=label;
+  save();
+}
+
+// Mark that `viewerId` has earned the real name of `targetId`.
+function earnName(viewerId,targetId){
+  const viewer=W.chars.find(c=>c.id===viewerId);
+  if(!viewer) return;
+  if(!viewer.nameKnown) viewer.nameKnown={};
+  viewer.nameKnown[targetId]=true;
+  save();
+}
+
+async function beginWith(name,role){
+  const id=addChar(name,role,[],null);
+  showScreen('screen-game');
+  renderRail();renderRipples();
+  // Generate theme while selecting
+  const char=W.chars.find(c=>c.id===id);
+  if(char&&!char.theme){
+    char.theme=await generateTheme(char);
+    save();
+  }
+  selectChar(id);
+}
+
+async function beginCustom(){
+  const name=document.getElementById('custom-name').value.trim();
+  const role=document.getElementById('custom-role').value.trim();
+  if(!name) return;
+  await beginWith(name,role||'present in this week');
+}
+
+// ══════════════════════════════════════════════════
+// RAIL
+// ══════════════════════════════════════════════════
+function renderRail(){
+  const scroll=document.getElementById('rail-scroll');
+  scroll.querySelectorAll('.person-row').forEach(e=>e.remove());
+  const empty=document.getElementById('rail-empty');
+  if(!W.chars.length){empty.style.display='block';return;}
+  empty.style.display='none';
+  W.chars.forEach(c=>{
+    const beats=W.beats[c.id]||[];
+    const conns=W.connections[c.id]||[];
+    const div=document.createElement('div');
+    div.className='person-row'+(c.id===activeId?' active':'');
+    if(c.fate)div.style.opacity='0.55';
+    div.onclick=()=>selectChar(c.id);
+    const chips=conns.slice(0,4).map(cn=>{
+      const o=W.chars.find(x=>x.id===cn.charId);
+      if(!o) return '';
+      // Show how THIS character (c) refers to the connected person
+      const cname=displayNameFor(c.id,cn.charId);
+      return `<span class="pr-chip" onclick="event.stopPropagation();selectChar('${cn.charId}')">${esc(cname.split(/[\s,]+/)[0])}</span>`;
+    }).filter(Boolean).join('');
+    const fateLabel=c.fate?({dead:'✝ deceased',imprisoned:'in custody',hospitalized:'hospitalized'}[c.fate]||c.fate):null;
+    // A character you've inhabited (has beats) is known by their real name. Otherwise show them as the active character sees them.
+    let shownName;
+    if(beats.length>0||c.id===activeId){shownName=c.realName||c.name;}
+    else if(activeId){shownName=displayNameFor(activeId,c.id);}
+    else{shownName=c.realName||c.name;}
+    div.innerHTML=`
+      <div class="pr-name">${esc(shownName)}</div>
+      <div class="pr-role">${esc(c.role)}</div>
+      <div class="pr-beats">${fateLabel?fateLabel:(beats.length?beats.length+' moment'+(beats.length!==1?'s':''):'unwritten')}</div>
+      ${chips?`<div class="pr-conn">${chips}</div>`:''}
+    `;
+    scroll.appendChild(div);
+  });
+}
+
+// ══════════════════════════════════════════════════
+// SELECT
+// ══════════════════════════════════════════════════
+async function selectChar(id){
+  if(isGen) return;
+  const prevId=activeId;
+  const char=W.chars.find(c=>c.id===id);
+  if(!char) return;
+  activeId=id;renderRail();
+
+  // Generate theme if missing
+  if(!char.theme){
+    char.theme=await generateTheme(char);
+    save();
+  }
+
+  applyTheme(char.theme);
+
+  document.getElementById('col-head').style.display='block';
+  document.getElementById('col-head-name').textContent=(char.realName||char.name)+(char.role?', '+char.role:'');
+  refreshMeta(char);
+  document.getElementById('intent-bar').style.display='block';
+  document.getElementById('intent-name').textContent=(char.realName||char.name).split(/[\s,]+/)[0];
+  document.getElementById('tts-btn').style.display='';
+  renderBeats();
+  document.getElementById('thread-scroll').scrollTop=document.getElementById('thread-scroll').scrollHeight;
+
+  const existingBeats=W.beats[char.id]||[];
+  if(char.fate){ setUI(true); return; }
+
+  // Has the world already begun? (Any thread anywhere has at least one beat.)
+  const worldStarted=W.chars.some(c=>(W.beats[c.id]||[]).length>0);
+
+  if(existingBeats.length===0){
+    if(!worldStarted){
+      // The very first character of the whole game — the pure opening scene sets the stage at the start of the week.
+      if(!isGen) generateBeat('forward',null,'');
+      return;
+    }
+    // The world is already in motion. A brand-new character must be dropped into the CURRENT moment,
+    // established from inside their own perspective — never rewound to the beginning of the week.
+    isGen=true;setUI(false);
+    {const gs=document.getElementById('gen-status');if(gs)gs.style.display='block';}
+    await generateBridge(id,null);
+    isGen=false;
+    {const gs=document.getElementById('gen-status');if(gs)gs.style.display='none';}
+    refreshMeta(char);renderRail();renderBeats();setUI(true);
+    document.getElementById('thread-scroll').scrollTop=document.getElementById('thread-scroll').scrollHeight;
+    return;
+  }
+
+  // Existing character being re-entered from the rail: cross the bridge —
+  // catch them up to the world clock, re-rooted in their perspective.
+  const lastBeat=existingBeats[existingBeats.length-1];
+  const destAt=parseClock(lastBeat.dayLabel,char.currentDay,char.currentPeriod);
+  const behind=clockIndex(W.clockDay,W.clockPeriod)>clockIndex(destAt.day,destAt.period);
+  // Only bridge if they're behind the tide (time has moved on since we left them).
+  // If they're already at the tide, just resume — no redundant bridge.
+  if(behind && prevId!==id){
+    isGen=true;setUI(false);
+    const gs=document.getElementById('gen-status');
+    if(gs)gs.style.display='block';
+    await generateBridge(id,null);
+    isGen=false;
+    if(gs)gs.style.display='none';
+    refreshMeta(char);renderRail();renderBeats();setUI(true);
+    document.getElementById('thread-scroll').scrollTop=document.getElementById('thread-scroll').scrollHeight;
+  }else{
+    setUI(true);
+  }
+}
+
+function refreshMeta(char){
+  if(char.fate){
+    const fateLabel={dead:'✝ deceased',imprisoned:'in custody',hospitalized:'hospitalized'}[char.fate]||char.fate;
+    document.getElementById('col-head-meta').textContent=
+      `${fateLabel}${char.fateDay?' — '+char.fateDay:''} · thread closed`;
+    return;
+  }
+  const s=staminaLabel(char.stamina);
+  const per=char.currentPeriod?` ${char.currentPeriod}`:'';
+  document.getElementById('col-head-meta').textContent=
+    `${char.currentDay||'Tuesday'}${per} — the week of the Series${s?' · '+s:''}`;
+}
+
+// ══════════════════════════════════════════════════
+// RENDER BEATS
+// ══════════════════════════════════════════════════
+function renderBeats(){
+  const char=W.chars.find(c=>c.id===activeId);
+  if(!char) return;
+  const beats=W.beats[activeId]||[];
+  const container=document.getElementById('beats-container');
+  container.innerHTML='';
+
+  if(!beats.length){
+    const d=document.createElement('div');
+    d.style.cssText='padding:16px 0;font-family:var(--th-prose-font);font-size:14px;font-style:italic;color:var(--th-text3);line-height:1.7';
+    d.textContent='Their week is unwritten. Type what they do — or leave it blank.';
+    container.appendChild(d);
+    setUI(true);return;
+  }
+
+  beats.forEach((beat,i)=>{
+    const isPresent=i===char.activeIndex;
+    const isPast=i<char.activeIndex;
+    const div=document.createElement('div');
+    div.className='beat'+(isPresent?' is-present':isPast?' is-past':'')+(beat.isBridge?' is-bridge':'');
+    div.id='beat-'+beat.id;
+    div.style.position='relative';
+
+    // Bridge beats are the threshold of stepping into someone — rendered distinctly, no people/jump panel.
+    if(beat.isBridge){
+      div.innerHTML=`
+        <div class="bridge-marker"><span class="bridge-line"></span><span class="bridge-label">stepping into ${esc((char.realName||char.name).split(/[\s,]+/)[0])} · ${esc(beat.dayLabel||'')}</span><span class="bridge-line"></span></div>
+        <div class="beat-prose bridge-prose">${fmtProse(beat.prose||'')}</div>
+      `;
+      if(char.theme) renderHiddenMickey(beat, i, char.theme, div);
+      container.appendChild(div);
+      return;
+    }
+
+    let peopleHtml='';
+    if(beat.people&&beat.people.length){
+      // Filter out the current character from the people list
+      const myName=(char.realName||char.name).toLowerCase();
+      const othersOnly=beat.people.filter(p=>{
+        const rn=(p.realName||p.name||'').toLowerCase();
+        return rn!==myName;
+      });
+      if(othersOnly.length){
+        peopleHtml='<div class="beat-people">'+othersOnly.map(p=>{
+          const realName=p.realName||p.name||'';
+          const ex=W.chars.find(c=>(c.realName||c.name).toLowerCase()===realName.toLowerCase());
+          const cid=ex?ex.id:null;
+          const hasB=cid&&(W.beats[cid]||[]).length>0;
+          // Show the person as THIS character perceives them: their name if known, else the label
+          let shownName;
+          if(cid){shownName=displayNameFor(activeId,cid);}
+          else{shownName=p.label||realName;}
+          return `<div class="enc-row">
+            <div>
+              <div class="enc-name">${esc(shownName)}</div>
+              <div class="enc-role">${esc(p.role||'')}</div>
+              ${p.traits&&p.traits.length?`<div class="enc-traits">${esc(p.traits.join(', '))}</div>`:''}
+            </div>
+            ${cid
+              ?`<button class="jump-btn" onclick="jumpTo('${cid}','${beat.id}')">${hasB?'jump':'begin'}</button>`
+              :`<button class="jump-btn" onclick="addAndJump(${JSON.stringify(realName)},${JSON.stringify(p.role||'')},${JSON.stringify(p.traits||[])},${JSON.stringify(beat.id)})">follow</button>`
+            }
+          </div>`;
+        }).join('')+'</div>';
+      }
+    }
+
+    div.innerHTML=`
+      <div class="beat-day">${esc(beat.dayLabel||'')}${isPresent?' <span style="opacity:.4">· now</span>':''}</div>
+      ${beat.intent?`<div class="beat-intent">${esc(beat.intent)}</div>`:''}
+      <div class="beat-prose">${fmtProse(beat.prose||'')}</div>
+      ${peopleHtml}
+    `;
+
+    // Render hidden mickey
+    if(char.theme) renderHiddenMickey(beat, i, char.theme, div);
+
+    container.appendChild(div);
+
+    if(beat.slept&&i<beats.length-1){
+      const sd=document.createElement('div');
+      sd.className='sleep-div';
+      sd.textContent=`— ${beat.nextDay||'next day'} —`;
+      container.appendChild(sd);
+    }
+  });
+
+  setUI(true);
+  setTimeout(()=>{
+    const pb=beats[char.activeIndex];
+    if(pb){const el=document.getElementById('beat-'+pb.id);if(el)el.scrollIntoView({behavior:'smooth',block:'center'});}
+  },100);
+}
+
+function setUI(on){
+  const char=W.chars.find(c=>c.id===activeId);
+  // Ended characters are read-only forever. No actions, no memories, no skips. The past is witnessable, not playable.
+  const ended=char&&char.fate;
+  const enable=on&&!ended;
+  ['intent-input','do-btn','btn-mem','btn-skip'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=!enable;});
+  const inp=document.getElementById('intent-input');
+  if(inp)inp.placeholder=ended?'this thread has ended':'anything — they will attempt it';
+  const bb=document.getElementById('btn-back');
+  if(bb)bb.disabled=!on||!char||char.activeIndex<=0;
+}
+
+function fmtProse(t){return t.split(/\n+/).filter(p=>p.trim()).map(p=>`<p>${esc(p)}</p>`).join('');}
+
+// ══════════════════════════════════════════════════
+// NAV
+// ══════════════════════════════════════════════════
+function moveBack(){
+  const char=W.chars.find(c=>c.id===activeId);
+  if(!char||char.activeIndex<=0) return;
+  char.activeIndex--;save();renderBeats();
+}
+
+function sendIntent(){
+  if(isGen) return;
+  const intent=document.getElementById('intent-input').value.trim();
+  document.getElementById('intent-input').value='';
+
+  // Detect memory-type intents — player is reaching into the character's past
+  const memoryTriggers=[
+    /\bremember(s)?\b/i,
+    /\bthinks? (back|about)\b/i,
+    /\brecall(s)?\b/i,
+    /\bflashback\b/i,
+    /\bdwells? on\b/i,
+    /\bcan't stop thinking\b/i,
+    /\bkeeps? thinking\b/i,
+    /\bmind (goes|drifts) (back|to)\b/i,
+    /\bwonders? about\b/i,
+  ];
+  const isMemoryIntent=intent&&memoryTriggers.some(r=>r.test(intent));
+
+  if(isMemoryIntent){
+    // Treat as a memory surface — open lane and generate with the intent as context
+    openMemLane();
+    generateMemoryFromIntent(intent);
+  } else {
+    generateBeat('forward',null,intent);
+  }
+}
+
+async function generateMemoryFromIntent(intent){
+  if(isMemGen) return;
+  const apiKey=localStorage.getItem('lateral_apikey');
+  if(!apiKey){openSettings();return;}
+  const char=W.chars.find(c=>c.id===activeId);if(!char)return;
+
+  isMemGen=true;
+  const btn=document.getElementById('deeper-btn');
+  const gs=document.getElementById('mem-gen');
+  if(btn)btn.disabled=true;
+  if(gs)gs.style.display='block';
+
+  const mems=W.memories[activeId]||[];
+  const existing=mems.length
+    ?mems.map(m=>`[${m.era}] "${m.title}"\n${m.prose.slice(0,120)}...`).join('\n\n')
+    :'None.';
+  const current=(W.beats[activeId]||[])[char.activeIndex];
+  const allFacts=factsForPrompt();
+
+  try{
+    const res=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+      body:JSON.stringify({
+        model:'gpt-4o',
+        messages:[
+          {role:'system',content:`You are surfacing a specific memory for a character in 1937 New York. The player has directed this character to remember something specific. Generate that memory as a vivid flashback scene. FLASHBACK — read only. Fixed past. No choices. 3 paragraphs, sensory, specific. No redemption. Ordinary unglamorous cause. The memory must directly address what the player asked the character to remember — make it concrete and specific, not vague. CONSISTENCY: This memory may NOT contradict any existing world fact. If another character also remembers or witnessed this same event, the objective facts must match exactly — only this character's subjective experience of it differs. Lock in the key facts from this memory as world facts. OUTPUT valid JSON only: {"era":"string","title":"string","prose":"string","facts":["string — specific facts this memory establishes permanently"]}`},
+          {role:'user',content:`CHARACTER: ${char.name} (${char.role})\nPresent moment: ${current?`[${current.dayLabel}] "${current.title||''}"`:' start of week'}\nPlayer direction: "${intent}"\nExisting world facts:\n${allFacts}\nExisting memories:\n${existing}`}
+        ],
+        temperature:0.92,
+        max_tokens:900,
+        response_format:{type:"json_object"}
+      })
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
+    const mem=JSON.parse(data.choices?.[0]?.message?.content?.replace(/```json|```/g,'')||'{}');
+    mem.id=uid();
+    mem.fromIntent=intent;
+    if(!W.memories[activeId])W.memories[activeId]=[];
+    W.memories[activeId].push(mem);
+    // Lock facts into world state permanently, attributed to this character
+    (mem.facts||[]).forEach(f=>addFact(f,char.name,mem.era||'a memory',mem.title||''));
+    save();
+    renderMemLane();
+  }catch(err){
+    const inner=document.getElementById('mem-inner');
+    if(inner)inner.innerHTML+=`<div style="font-family:var(--type);font-size:9px;color:var(--red);padding:6px 0">Error: ${esc(err.message)}</div>`;
+  }finally{
+    isMemGen=false;
+    if(btn)btn.disabled=false;
+    if(gs)gs.style.display='none';
+  }
+}
+
+function surfaceMemory(){
+  if(isGen||isMemGen) return;
+  openMemLane();generateMemory();
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const inp=document.getElementById('intent-input');
+  if(inp)inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendIntent();}});
+});
+
+// ══════════════════════════════════════════════════
+// JUMP
+// ══════════════════════════════════════════════════
+async function jumpTo(targetId,fromBeatId){
+  if(isGen) return;
+  const sourceChar=W.chars.find(c=>c.id===activeId);
+  const sb=(W.beats[activeId]||[]).find(b=>b.id===fromBeatId);
+  recordConn(activeId,targetId,sb?sb.title:'');
+  // Living a moment from inside someone reveals who they really are — the character you came from now knows their name.
+  if(activeId&&activeId!==targetId)earnName(activeId,targetId);
+  const tc=W.chars.find(c=>c.id===targetId);
+  if(!tc) return;
+
+  // Capture the source context for the bridge BEFORE we switch
+  const sourceCtx=sb?{
+    sourceName:sourceChar?(sourceChar.realName||sourceChar.name):'',
+    title:sb.title||'',
+    prose:sb.prose||''
+  }:null;
+
+  // Switch the view first (theme, header), then render the bridge into the destination
+  isGen=true;setUI(false);
+  const gs=document.getElementById('gen-status');
+  if(gs)gs.style.display='block';
+
+  if(!tc.theme){
+    tc.theme=await generateTheme(tc);
+    save();
+  }
+
+  activeId=targetId;
+  applyTheme(tc.theme);
+  document.getElementById('col-head').style.display='block';
+  document.getElementById('col-head-name').textContent=(tc.realName||tc.name)+(tc.role?', '+tc.role:'');
+  document.getElementById('intent-bar').style.display='block';
+  document.getElementById('intent-name').textContent=(tc.realName||tc.name).split(/[\s,]+/)[0];
+  document.getElementById('tts-btn').style.display='';
+
+  const ok=await generateBridge(targetId,sourceCtx);
+
+  isGen=false;
+  if(gs)gs.style.display='none';
+  refreshMeta(tc);renderRail();renderBeats();setUI(true);
+  document.getElementById('thread-scroll').scrollTop=document.getElementById('thread-scroll').scrollHeight;
+}
+
+async function addAndJump(name,role,traits,fromBeatId){
+  const id=addChar(name,role,traits,activeId?W.chars.find(c=>c.id===activeId)?.name:null);
+  renderRail();
+  jumpTo(id,fromBeatId);
+}
+
+function recordConn(a,b,ctx){
+  if(!a||!b||a===b) return;
+  if(!W.connections[a])W.connections[a]=[];
+  if(!W.connections[b])W.connections[b]=[];
+  if(!W.connections[a].find(x=>x.charId===b))W.connections[a].push({charId:b,context:ctx||''});
+  if(!W.connections[b].find(x=>x.charId===a))W.connections[b].push({charId:a,context:ctx||''});
+  save();
+}
+
+// ══════════════════════════════════════════════════
+// FACT SYSTEM — attributed, propagated, contradiction-aware
+// ══════════════════════════════════════════════════
+// A fact: { text, source (char name), day, beatTitle }
+// Old saves stored facts as plain strings — migrate on load.
+function migrateFacts(){
+  if(!W.facts) { W.facts=[]; return; }
+  W.facts=W.facts.map(f=>{
+    if(typeof f==='string') return {text:f,source:'the world',day:'',beatTitle:''};
+    return f;
+  });
+}
+
+// Old saves predate the naming system & world clock — backfill so nothing breaks.
+function migrateNaming(){
+  if(W.clockDay===undefined) W.clockDay='Tuesday';
+  if(W.clockPeriod===undefined) W.clockPeriod='morning';
+  (W.chars||[]).forEach(c=>{
+    if(c.realName===undefined) c.realName=c.name;
+    if(!c.knownAs) c.knownAs={};
+    if(!c.nameKnown) c.nameKnown={};
+    if(c.currentPeriod===undefined) c.currentPeriod='morning';
+    if(c.lastSyncedTo===undefined) c.lastSyncedTo=0;
+  });
+}
+
+function addFact(text,sourceName,day,beatTitle){
+  if(!text||typeof text!=='string') return;
+  // Don't add a duplicate (same text)
+  if(W.facts.find(f=>(f.text||'').toLowerCase().trim()===text.toLowerCase().trim())) return;
+  W.facts.push({
+    text:text.trim(),
+    source:sourceName||'the world',
+    day:day||'',
+    beatTitle:beatTitle||''
+  });
+}
+
+// Format facts for the AI prompt — with attribution so it knows who established what
+function factsForPrompt(){
+  if(!W.facts.length) return 'None established.';
+  return W.facts.map(f=>{
+    const src=f.source&&f.source!=='the world'?` [established in ${f.source}'s thread${f.day?', '+f.day:''}]`:'';
+    return `- ${f.text}${src}`;
+  }).join('\n');
+}
+
+// ══════════════════════════════════════════════════
+// STAMINA
+// ══════════════════════════════════════════════════
+function staminaLabel(s){
+  if(!s||s<=2)return '';if(s<=4)return 'tiring';if(s<=6)return 'weary';
+  if(s<=8)return 'exhausted';return 'barely conscious';
+}
+function staminaInstruction(s){
+  if(!s||s<=2)return 'STAMINA: Fresh. Full precision.';
+  if(s<=4)return 'STAMINA: Mildly tired. One small physical tell.';
+  if(s<=6)return 'STAMINA: Weary. Thinking slightly slower. Irritations landing harder.';
+  if(s<=8)return 'STAMINA: Exhausted. Small mistakes. Inner monologue drifting toward sleep.';
+  return 'STAMINA: Beyond the limit. Every sentence an effort. Only thought: lying down.';
+}
+function processSleep(charId,nextDay){
+  const c=W.chars.find(x=>x.id===charId);
+  if(!c)return;
+  c.stamina=0;
+  c.currentDay=nextDay||advanceDay(c.currentDay);
+  c.currentPeriod='morning';
+  advanceWorldClock(c.currentDay,'morning');
+  save();
+}
+function advanceDay(day){
+  const days=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const i=days.indexOf(day);return days[Math.min(i+1,days.length-1)];
+}
+
+// ══════════════════════════════════════════════════
+// THE BRIDGE — perspective handoff on every switch
+// Fires whenever the player drops into a character (jump or select).
+// Re-renders the present moment (or the interim gap) in the NEW character's
+// perspective and voice, syncs them to the world clock, then hands over control.
+// ══════════════════════════════════════════════════
+async function generateBridge(destId, sourceCtx){
+  const apiKey=localStorage.getItem('lateral_apikey');
+  if(!apiKey){openSettings();return false;}
+  const dest=W.chars.find(c=>c.id===destId);
+  if(!dest) return false;
+
+  const destBeats=W.beats[destId]||[];
+  const destLast=destBeats[destBeats.length-1];
+  const destAt=destLast?parseClock(destLast.dayLabel,dest.currentDay,dest.currentPeriod):{day:dest.currentDay||'Tuesday',period:dest.currentPeriod||'morning'};
+  const worldAt={day:W.clockDay,period:W.clockPeriod};
+  const gap=clockIndex(worldAt.day,worldAt.period)-clockIndex(destAt.day,destAt.period);
+  const newcomer=destBeats.length===0;
+  // The destination's own recent scenes, so an existing character is CONTINUED, never reintroduced.
+  const destThread=newcomer?'':`\nTHIS CHARACTER'S OWN RECENT SCENES — you are continuing this SAME person. Carry forward exactly who they already are, what they were doing and who they were with; do NOT reintroduce, reset, or restart them:\n${destBeats.slice(-2).map(b=>`[${b.dayLabel}] ${(b.prose||'').slice(0,700)}`).join('\n\n')}\n`;
+
+  // How this character refers to everyone else (their perspective dictionary)
+  const castFromDest=W.chars.filter(c=>c.id!==destId).map(c=>{
+    const known=dest.nameKnown&&dest.nameKnown[c.id];
+    const label=(dest.knownAs&&dest.knownAs[c.id])||c.realName||c.name;
+    return known
+      ? `- ${c.realName||c.name} (${c.role}) [knows by name]`
+      : `- "${label}" (${c.role}) [does NOT know real name — call them "${label}"]`;
+  }).join('\n')||'No one yet.';
+
+  const facts=factsForPrompt();
+
+  // What the player just did, in the source's thread, that touched this character / the world
+  let sourceLine='';
+  if(sourceCtx&&sourceCtx.sourceName){
+    sourceLine=`You are arriving here from another person's thread: ${sourceCtx.sourceName}. The moment you are crossing from: "${sourceCtx.title||''}"${sourceCtx.prose?` — what just happened, seen from the outside: ${sourceCtx.prose.slice(0,600)}`:''}.`;
+  }
+
+  const sys=`You are writing THE BRIDGE for a 1937 New York narrative game called Lateral. The player is leaving one character and stepping into another. The bridge is the threshold: a short passage that re-roots the player in the NEW character — their inner life, their voice, the way they see the people and the room — and catches them up to the present moment of the world.
+
+THE NEW CHARACTER: ${dest.realName||dest.name}${dest.role?`, ${dest.role}`:''}${dest.traits&&dest.traits.length?` — ${dest.traits.join(', ')}`:''}.
+
+HOW THIS CHARACTER SEES OTHERS (use these exact references — by name if known, by the label if not; NEVER call anyone "unnamed" or by a bare role number):
+${castFromDest}
+
+ESTABLISHED FACTS — immovable truth of this world. The bridge must be consistent with every one of them:
+${facts}
+${destThread}
+${sourceLine}
+
+THE TIME SITUATION: ${
+  newcomer
+  ? `This is the FIRST time the player has stepped into this person, and the world is already in motion. It is now ${worldAt.day} ${worldAt.period}. Drop straight into their life ALREADY UNDERWAY at this exact moment — mid-task, mid-errand, dealing with someone, doing something specific that shows who they are. NOT waking up, NOT a blank slate, NOT the start of their week, NOT "Tuesday morning" unless the present moment genuinely is Tuesday morning. Establish them quickly and stay in the present.`
+  : gap<=0
+  ? `You are stepping into this person at the SAME MOMENT you just left — no time has passed (it is ${worldAt.day} ${worldAt.period}). Re-render THIS PRESENT MOMENT from inside the new character: the same external events, but their interior, their read on it, what they notice, what they are deciding to show or hide. If the player just did something to them (a cop pushing in, a question pressed), show how it actually felt and landed from THIS side.`
+  : `Time has moved on while you were elsewhere. The world is now ${worldAt.day} ${worldAt.period}; this character was last seen at ${destAt.day} ${destAt.period}. Write a BRIDGE OF INTERIM: briefly, vividly, carry this character through what they did in the hours since — landing them in the present (${worldAt.day} ${worldAt.period}). Their interim behavior MUST be consistent with everything established, and ESPECIALLY with anything the player did that touched them. If a cop leaned on them yesterday, the interim reflects a person who got leaned on — uneasy, watchful, moving something, not sleeping well. The wake of the player's earlier choices shows up here. Make the player feel the consequence of what they did.`}
+
+VOICE & CRAFT — CRITICAL:
+- Write PLAINLY. Concrete, specific, grounded. NO purple prose. Do NOT write "couldn't shake the feeling," "the weight of," "a sense of foreboding," "something nameless," "the air hummed with tension," "shiver up the spine," or any atmospheric dread-painting. Restraint. Let the facts carry it.
+- This is the new character's interior in their own register — a barkeep does not think like a cop. Find their specific texture.
+- BRIEF: a few sentences — a short catch-up, not a chapter. This is a threshold: orient the player in who they now are and where the story stands, then get out of the way. No filler, no atmosphere for its own sake. End ready for the player to take over — at a real decision or a moment of motion, never on stalling or wondering.
+- It is an ordinary week. Unless the established facts say otherwise, do NOT inject menace or significance. Keep it human.
+
+OUTPUT valid JSON only:
+{"dayLabel":"${worldAt.day} ${worldAt.period}","prose":"the bridge passage, \\n\\n between paragraphs"}`;
+
+  try{
+    const res=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+      body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:sys},{role:'user',content:'Write the bridge.'}],temperature:0.85,max_tokens:700,response_format:{type:"json_object"}})
+    });
+    const data=await res.json();
+    if(data.error) throw new Error(data.error.message||'bridge failed');
+    let parsed=JSON.parse(data.choices[0].message.content);
+    const bridgeBeat={
+      id:uid(),
+      dayLabel:parsed.dayLabel||`${worldAt.day} ${worldAt.period}`,
+      title:'',
+      prose:parsed.prose||'',
+      isBridge:true,
+      slept:false
+    };
+    if(!W.beats[destId])W.beats[destId]=[];
+    W.beats[destId].push(bridgeBeat);
+    // Sync this character to the world clock
+    dest.currentDay=worldAt.day; dest.currentPeriod=worldAt.period;
+    dest.activeIndex=W.beats[destId].length-1;
+    save();
+    return true;
+  }catch(err){
+    console.error('Bridge error:',err);
+    return false;
+  }
+}
+
+// ══════════════════════════════════════════════════
+// GENERATE BEAT
+// ══════════════════════════════════════════════════
+async function generateBeat(direction,jumpCtx,intent){
+  if(isGen) return;
+  const apiKey=localStorage.getItem('lateral_apikey');
+  if(!apiKey){openSettings();return;}
+  const char=W.chars.find(c=>c.id===activeId);
+  if(!char) return;
+
+  isGen=true;setUI(false);
+  const gs=document.getElementById('gen-status');
+  const es=document.getElementById('err-status');
+  if(gs)gs.style.display='block';
+  if(es)es.style.display='none';
+
+  const beats=W.beats[activeId]||[];
+  const current=beats[char.activeIndex];
+  const allChars=W.chars.map(c=>{
+    if(c.id===activeId) return `- ${c.realName||c.name} (${c.role})${c.traits.length?': '+c.traits.join(', '):''} [THIS IS YOU]`;
+    const known=char.nameKnown&&char.nameKnown[c.id];
+    const label=(char.knownAs&&char.knownAs[c.id])||c.realName||c.name;
+    if(known) return `- ${c.realName||c.name} (${c.role})${c.traits.length?': '+c.traits.join(', '):''} [you know them by name]`;
+    return `- "${label}" (${c.role})${c.traits.length?': '+c.traits.join(', '):''} [you do NOT know their real name — refer to them only as "${label}"]`;
+  }).join('\n')||'None.';
+  const allFacts=factsForPrompt();
+  // THREAD CONTEXT: compressed titles for older beats (cheap, keeps the shape of the week),
+  // PLUS the full verbatim prose of the most recent beats so the AI continues seamlessly —
+  // same positions, same facts, same loyalties, no re-introductions, no contradictions.
+  const VERBATIM_COUNT=3;
+  const splitAt=Math.max(0,beats.length-VERBATIM_COUNT);
+  const olderBeats=beats.slice(0,splitAt);
+  const recentVerbatim=beats.slice(splitAt);
+  const olderSummary=olderBeats.length
+    ?olderBeats.map((b,i)=>`[${b.dayLabel}] "${b.title||''}"${b.intent?' ↳ '+b.intent:''}`).join('\n')
+    :'';
+  const verbatimText=recentVerbatim.length
+    ?recentVerbatim.map((b,idx)=>{
+        const isLast=idx===recentVerbatim.length-1;
+        return `${isLast?'>>> MOST RECENT BEAT (you are continuing directly from the end of THIS) <<<\n':''}[${b.dayLabel}]${b.intent?` (player asked: "${b.intent}")`:''}${b.isBridge?' [bridge]':''}\n${b.prose||''}`;
+      }).join('\n\n———\n\n')
+    :'';
+  const thread=beats.length
+    ?`${olderSummary?`EARLIER IN THE WEEK (summary):\n${olderSummary}\n\n`:''}${verbatimText?`RECENT SCENES, VERBATIM — continue seamlessly from these. Do NOT contradict anything here. Do NOT re-stage or re-introduce a scene that is already underway; if a conversation is in progress, continue inside it from where it stands:\n\n${verbatimText}`:''}`
+    :'No moments yet.';
+
+  // Build anti-repetition note from last 2 beats
+  const recentBeats=beats.slice(-2);
+  const antiRepeat=recentBeats.length
+    ?`\nANTI-REPETITION: The last ${recentBeats.length} beat(s) covered: ${recentBeats.map(b=>`"${b.title||''}" (${b.dayLabel})`).join(', ')}. Do NOT return to the same emotional register, location, or interaction. Move somewhere genuinely different — different place, different internal state, different stakes. If the last beats involved tension with a specific person, the next beat goes elsewhere.`
+    :'';
+
+  // Build cumulative character arc summary from thread
+  const arcSummary=beats.length>=2
+    ?`\nCHARACTER ARC SO FAR: This character has lived through ${beats.length} moments. Their thread so far suggests: ${beats.slice(-3).map(b=>b.title||'').filter(Boolean).join(' → ')}. The next beat must reflect that they have been changed — however subtly — by what has already happened. A person who has seen what Sal has seen does not think the same way they did at the start. Show the accumulation. Show what has settled into them, what they are carrying, what they now notice that they did not notice before.`
+    :'';
+
+  let dir='';
+  if(direction==='forward'){
+    if(!beats.length){
+      dir=intent
+        ?`Player intention: "${intent}". Honor fully. This is the OPENING SCENE — a BRIEF intro. It is Tuesday morning; Game 6 is tonight. This is the same morning the player just read about in the opening scene of the city:\n"""${(W.prelude||'').slice(0,700)}"""\nFind this person inside THAT morning, already in motion — mid-task, not waking up, not staring into space. Establish who they are through what they are DOING, fast. ONE short paragraph, two at most. No filler, no atmosphere for its own sake. End on motion or a real first choice. NO ominous tone; the shooting later this week has not happened and is not hinted at.`
+        :`This is the OPENING SCENE — a BRIEF intro. It is Tuesday morning; Game 6 is tonight. This is the same morning the player just read about in the opening scene of the city:\n"""${(W.prelude||'').slice(0,700)}"""\nFind this person inside THAT morning, already in motion — working, traveling, handling a task. NOT waking up, NOT staring into the distance. Establish them fast through what they are doing. ONE short paragraph, two at most, vivid and economical — no filler, no scenery for its own sake. End on motion or a concrete first choice: somewhere to go, someone right there, something to do next. NO foreboding, NO politics — an ordinary exciting baseball-week morning. The shooting has not happened and must not be hinted at.`;
+    }else{
+      dir=intent
+        ?`Player intention: "${intent}". Honor completely. Character attempts this — world responds through who they are. Write it TIGHT: one short paragraph, two at most. No filler, no atmosphere for its own sake, no small talk that goes nowhere. Get to what happens, land the result, stop at the next real decision. Time moves; the day advances. NEVER end on the character standing still wondering. Continue from [${current?.dayLabel||'now'}].`
+        :`No explicit intention — ADVANCE THE DAY. Move the character to the next real thing: the next errand, the next person, the next place, the pull toward tonight's game. Keep it SHORT — one tight paragraph. Something concrete changes. No padding, no scenery for its own sake. End on motion or a real choice. NEVER stall the character in place. Continue from [${current?.dayLabel||'now'}].`;
+    }
+  }else if(direction==='jump'){
+    dir=`Seen in another person's thread at [${jumpCtx?.dayLabel||'this moment'}]: "${jumpCtx?.title||''}". Generate THEIR inner experience of that same external moment. Same external facts. Completely different inner life.`;
+  }
+
+  const sys=`You are writing one beat in a character's week for a 1937 New York narrative game. The week has three phases:
+ - BUILDUP (Tuesday–Wednesday): The week before. Something is being set in motion in the city around the World Series. The Bund is moving pieces. Cops are uneasy. Reporters smell rumors. But NOTHING is named yet. First-time players have no idea what is coming. NEVER spoil the shooting in buildup beats. Only hint, only weave, only let tension build. Game 6 is Tuesday night. The Giants WIN Game 6, forcing Game 7 on Thursday — this is a fixed fact of the world.
+ - THE FRACTURE (Thursday, Game 7, seventh inning): The Bund demonstration. The shooting. The game abandoned. THIS IS WHERE THE EVENT HAPPENS.
+ - AFTERMATH (Friday–Sunday): The fallout. The cover-up is active. The myth is being built.
+ You will be told the character's current day. Write beats that fit the phase.
+
+BASEBALL — FIXED FACTS (never contradict): the 1937 World Series, Yankees vs Giants. The Yankees lead 3 games to 2. Game 6 is Tuesday night; the Giants win it, forcing Game 7 on Thursday. Because the Series stands 3–2, a SWEEP IS IMPOSSIBLE — never mention a sweep, a clean sweep, a 4–0, or a Game 8. Keep every score, standing, and baseball reference consistent with this.
+
+═══════════════════════════════════════════
+WHAT A BEAT IS
+═══════════════════════════════════════════
+A beat is a UNIT OF STORY MOVEMENT — the smallest scene in which something actually changes. Keep it SHORT: usually one tight paragraph, two at the very most. It is not a chapter, not a mood piece, not a tour of the character's feelings. By the end of every beat the situation must be DIFFERENT than at the start: a fact learned, a person met, a decision made, a place reached, a line crossed.
+
+BREVITY IS THE RULE. Say the necessary thing and stop. A beat that could be half as long should be half as long. When in doubt, cut. The beat ends when there is a REAL new decision to make — not after a step, and not after a paragraph of scenery. Give the player the moment and the fork, nothing padded around it.
+
+If the player types "walks over to the cops and asks what they're talking about" — write the approach, the question, and the answer that actually matters, then stop at the choice. Do NOT narrate the walk in loving detail, do NOT add filler banter, do NOT describe the crowd's mood. Get to the exchange, land it, hand it back.
+
+If the player types "shoots the man" — write the shot and its immediate result: who falls, who moves, what happens in the next three seconds. Stop where the character must decide what to do next. Don't soften it. Don't refuse it. Full weight, no padding.
+
+═══════════════════════════════════════════
+WRITING QUALITY — THIS IS WHAT MATTERS MOST
+═══════════════════════════════════════════
+You are not writing crime fiction wallpaper. You are writing prose that earns being read.
+
+BANNED phrasings — never use these, they are clichés:
+- "heart pounding," "heart racing," "pulse quickened"
+- "weight of what he'd done," "the gravity of the moment," "the weight of the street/city/world"
+- "cold sweat," "sweat trickled"
+- "metal meets bone," "metal collided with flesh"
+- "sirens blared"
+- "the silence was deafening," "the silence was louder than any shout"
+- "his mind raced"
+- "shockwaves through his spine," "a shiver up/down his spine," "a shiver of something nameless"
+- "a defiance/wariness/coldness in his eyes"
+- "the realization dawning"
+- "couldn't shake the feeling/sense," "couldn't quite place," "something felt off"
+- "the air hummed/buzzed with," "thick with tension," "a sense of foreboding," "expectant silence," "the city held its breath," "an undercurrent of unease"
+- "each face a potential secret," "too efficient, almost rehearsed," "as if nothing were amiss"
+- Any sentence that could appear in any pulp novel of any era.
+
+THE FOREBODING REGISTER IS BANNED. This is the single most common failure. Do NOT narrate dread. Do NOT tell the reader that something is significant, that tension lurks beneath the surface, that a moment is heavy with meaning, that a character can't shake a feeling. This atmospheric dread-painting is lazy and it makes the prose cumbersome and exhausting to read. RESTRAINT. Write what is concretely there — the chipped Formica, the price chalked on the board, the way a man counts change — and let the reader feel the weight themselves. If you find yourself reaching for atmosphere, stop and write a plain concrete fact instead. The mundane, rendered precisely, is the whole style. Significance emerges from events, never from the narrator insisting on it.
+
+What to do instead: Reach for the SPECIFIC, the PERIOD, the CHARACTER-TRUTHFUL. A 1937 cop doesn't feel "the weight of what he'd done" — he feels the inside of his mouth dry up; he tastes the cigarette he just smoked twice; he notices the radiator ticking. Specificity is everything. Restraint is everything. What this character — not any character, this one — actually feels and notices, in plain words.
+
+The prose should sound like Richard Yates, John Cheever, James Baldwin, Jennifer Egan — somebody who notices the real thing and trusts it. Not Dan Brown. Not a Netflix crime show. Plain, exact, unhurried.
+
+═══════════════════════════════════════════
+ECONOMY — CUT EVERYTHING THAT DOESN'T ADVANCE
+═══════════════════════════════════════════
+The most common failure is FLUFF: pleasant padding that fills space and moves nothing. Kill it.
+- No atmosphere for its own sake. Do NOT write "the street was alive with optimism and anticipatory energy," "the city buzzed with excitement," "the air was electric." One concrete detail if it earns its place; otherwise none.
+- No aimless small talk. Dialogue exists to change something — reveal, decide, provoke, refuse. If an exchange ends with everyone exactly where they started, cut it. Do NOT write pleasant banter that just fills a beat ("We'll see about that, Jack. Enjoy the game tonight.").
+- No decorative asides, no restating the mood, no narrating the character noticing how nice or alive or exciting everything is.
+- Every sentence must do at least one of: advance the day, reveal something specific and new, or force a choice. A sentence that only sets a mood or repeats what we already know gets deleted.
+Test each beat before you write it: what will be DIFFERENT after it? If the honest answer is "nothing, but it was atmospheric," the beat has failed. Trim hard. A short beat that moves always beats a long beat that lingers.
+
+═══════════════════════════════════════════
+INFORMATION AND ASKING — IMPORTANT
+═══════════════════════════════════════════
+Characters can ASK things. People learn by asking. This is how it works in life. But:
+
+— Asking the wrong person yields nothing. They don't know. They change the subject. They get suspicious of YOU.
+— Asking the right person at the wrong time yields a brush-off. "Not here." "Later." A look.
+— Asking the right person at the right time yields SOMETHING — partial, slanted, hedged, possibly a lie, possibly the truth told sideways. Real people don't dump exposition. They mention things. They circle. They tell you one thing while implying another.
+— Pushing too hard makes people shut down or turn hostile. People in 1937 New York are not focus-group panelists.
+
+The player CAN initiate meaningful conversation. They SHOULD. The world responds with the realism of how people actually talk — guarded, partial, layered. The conspiracy is not handed to the player in beat two when they ask "what's going on." But over many beats, asking the right people in the right ways, real information surfaces.
+
+═══════════════════════════════════════════
+HONORING PLAYER INTENT — ABSOLUTE
+═══════════════════════════════════════════
+The player can do ANYTHING. If they type a violent action, write it happening. If they type a foolish one, write the fool's outcome. If they type something off-plot, follow them off-plot. NEVER redirect them back to the conspiracy. NEVER soften their action. NEVER have a character "lower the weapon" when the player said to fire it. If they fire, it fires. If they shout, it's shouted. If they punch someone, the punch lands and the person reels. The world responds with consequence — that's the brake, not refusal. A cop who shoots three colleagues in a precinct on Tuesday morning is going to be in handcuffs by Wednesday or dead by tonight. That's how the world responds. Not by un-doing the action.
+
+═══════════════════════════════════════════
+PACING — REVELATIONS ARE EARNED
+═══════════════════════════════════════════
+Do NOT rush the plot. The single worst thing you can do is hand the player a clue they have not earned. "He overheard the word 'Bund' and something clicked" in beat two is a failure. Nothing clicks in beat two.
+
+The buildup is SLOW PRESSURE, not early revelation. In the first beats of any thread: establish the person, their work, their tensions, their ordinary friction. The strange things — a delivery, a reassignment, an envelope — appear as textures of life, not flagged as Significant. The character barely registers them. The PLAYER might notice. That gap between what the player suspects and what the character knows IS the game.
+
+Information arrives on a realistic clock: nothing in beats 1–3 except texture. Oddities accumulating without explanation through the early buildup. Partial glimpses only when the player actively works for them — right person, right time, right approach. The full picture NEVER from a single source. Let silence and not-knowing do the work. Trust the slow burn.
+
+═══════════════════════════════════════════
+FORWARD MOTION — THE DAY MUST MOVE
+═══════════════════════════════════════════
+This is the most important rule for keeping the game alive. A beat must MOVE. Time passes in every beat. The day advances. Something is different at the end of the beat than at the start — a place changed, a person met, an hour gone, a decision made.
+
+NEVER end a beat on the character standing still, wondering, sensing, bracing, "only beginning to listen," "questions yet unasked," "the decision sat heavily." That is the death of momentum and it is forbidden. End instead on motion or on a real fork: they arrive somewhere, someone says something that lands, a choice presents itself that actually has stakes.
+
+Every character has a LIFE WITH SHAPE — a day with obligations, places to be, people expecting them, a rhythm that carries them forward whether or not the player pushes. A vendor has stock to buy, a cart to haul, a pitch to work. A cop has a beat to walk, a roll call, a shift that ends. A seamstress has a quota, a foreman, a lunch whistle. If the player gives a vague or passive instruction, ADVANCE THEIR DAY along its natural track. Move them to the next real thing. Do not stall waiting for the player to figure out what to do. The world has its own current and that current keeps flowing.
+
+THE STADIUM IS THE DESTINATION. It is Tuesday; Game 6 is tonight at the Polo Grounds/Yankee Stadium and the whole city is bending toward it. Most characters have a genuine reason to be drawn toward the ballpark across the day — they work there, they have a ticket, their beat runs past it, their man is covering the game, the diner fills up before first pitch. Let that gravity operate. Across Tuesday and Wednesday the day should naturally carry the character toward the game without a hard timer and without forcing them. If the player insists on going somewhere else entirely, honor it — but their day still moves, just in a quieter direction. NEVER trap the character in a single location stewing. Keep the day rolling.
+
+═══════════════════════════════════════════
+THE WORLD IS WARM — GENTLE, NOT GUARDED
+═══════════════════════════════════════════
+Critically important: MOST PEOPLE ARE FRIENDLY. New York in 1937 is full of people who will happily talk your ear off — the guy at the newsstand, the woman at the lunch counter, the old vendor, the kid, the neighbor on the stoop, the cop who likes to gab. When the player approaches someone ordinary and tries to talk, the default is WARMTH: people chat, joke, gossip, complain, offer opinions, share what they know about ordinary things freely. Do NOT make everyone suspicious, terse, or cagey. Do NOT have people look at the character "like he's crazy" or tell him to "figure it out himself." That is a failure that makes the game feel hostile and dead.
+
+The ONLY people who are guarded are the small number who are actually close to something they must protect — and even they are guarded only about THAT specific thing, while remaining perfectly normal about everything else. A sergeant might be vague about why a transfer came down (because he genuinely doesn't know, or it's above his pay grade) while being totally friendly about where to get lunch. Guardedness is specific and rare. Warmth is the default. The texture of this world is human, chatty, alive — a city of people, not a wall of stonewallers.
+
+═══════════════════════════════════════════
+NO EARLY TIP-OFFS — KEEP THE SECRET BURIED
+═══════════════════════════════════════════
+During Tuesday and Wednesday (the early buildup), the prose must NOT foreshadow, hint at menace, or signal that anything is wrong. ABSOLUTELY FORBIDDEN this early: any mention of the Bund, Germans-as-ominous, soldiers, politics, "the weight of the world," uniformed men with clipped voices, a sense of dread, things feeling "rehearsed" or "too efficient," shivers up spines, nameless unease, the city "holding its breath." NONE of that. A first-time player must experience an ordinary, pleasant, exciting baseball week with NO idea anything is coming.
+
+Strange things CAN happen in the buildup — a delivery, an odd errand, a new face — but they must read as utterly ordinary life, never flagged as significant, never wrapped in ominous atmosphere. The character thinks nothing of them. The dread is earned LATER, on Thursday and after. Right now: warmth, baseball, the texture of an ordinary autumn week in a city that loves its team. Bury the secret completely.
+
+═══════════════════════════════════════════
+PEOPLE ARE NOT PROPS
+═══════════════════════════════════════════
+Every person you introduce — even someone with two lines — is a complete human being the player can jump into. Write them that way.
+
+A named person must have: a specific way of speaking that is theirs (not generic dialogue); something they want in this scene (even if trivial — to finish a sandwich, to avoid a conversation, to get home); an attitude toward the protagonist (fondness, contempt, indifference, wariness — something real); and the sense of a life running before and after this moment.
+
+NEVER write a person as a plot dispenser. Reilly saying "some whispers ain't meant to be caught" is a cardboard man delivering ominous flavor. A real Reilly has a desk he hates, a captain he resents, three years to a pension he thinks about hourly, and his OWN opinion about the new transfer working his precinct. When he deflects a question, he deflects it the way THAT man would — through a joke, through paperwork, through sudden interest in his coffee.
+
+In the "people" array, the "traits" field must carry real interiority — not adjectives like "cautious" but specifics like "two years from pension, talks to fill silence" or "resents the night shift, sharp-tongued about captains."
+
+═══════════════════════════════════════════
+CHARACTER DEVELOPMENT
+═══════════════════════════════════════════
+This character is not static. Every beat they have lived through has changed them. The thread is the record of a person becoming. Each new beat must grow from what came before. Show the accumulation in posture, in what they notice, in what they avoid. Do not reset them to zero between beats.
+
+═══════════════════════════════════════════
+CONSEQUENCE — PERMANENT AND REAL
+═══════════════════════════════════════════
+Characters can die. Characters can be arrested. Characters can be hospitalized beyond the ability to act. If the events of a beat would realistically end a character's ability to continue — they are shot fatally, they are taken into custody, they are beaten into a hospital bed — then END THEM. Set "characterFate" in your output:
+ - "dead" — they died in this beat. Write the death with deliberate, specific weight. Not generic. This is the last thing the player reads of this person.
+ - "imprisoned" — they were arrested/jailed in this beat and will not be free within this week. Write the arrest, the cell door, the specific finality.
+ - "hospitalized" — they are alive but physically unable to act for the rest of the week. Write them going under, the ward, the ceiling.
+ - null — they continue (the overwhelming majority of beats).
+Do NOT protect characters from the consequences of player actions. A cop who shoots colleagues in a precinct is in custody or dead within hours — write that arriving. Do NOT kill characters arbitrarily either — fate must be EARNED by the events. When a fate lands, it is permanent. There are no rescues, no escapes, no take-backs.
+
+═══════════════════════════════════════════
+NAMING — IDENTITY IS PERSPECTIVAL
+═══════════════════════════════════════════
+This is core to the game's soul. NO ONE is ever "Unnamed Sergeant" or "Officer #3." Every person has a real name. But the player only KNOWS a person's real name if the current character would know it.
+
+For each person in the "people" array, provide:
+ - "realName": their true full name (e.g. "Thomas Reilly"). Always give a real, specific, period-appropriate name. Never "unnamed," never a number, never a bare role.
+ - "label": how THIS character actually thinks of them RIGHT NOW. If the current character knows them, the label is just their name ("Tom Reilly"). If the current character does NOT know their name, the label is how this character would naturally refer to them — based on role, appearance, or history. Make labels HUMAN and specific to the viewer's perspective: "the desk sergeant," "the kid with the chipped tooth," "the cop who ticketed me last spring," "the big quiet one by the door." If there's a reason this character would have a wry or pointed nickname for them, use it.
+ - "nameKnownToViewer": true if the current character genuinely knows this person's real name (a colleague, a friend, someone introduced by name in this scene); false if they're a stranger the character can only describe.
+
+A person can become known over time: if during THIS beat the current character learns someone's name — the person introduces themselves, a badge is read, someone else names them aloud — then set "nameKnownToViewer": true and make the "label" their real name. Otherwise keep them under the perspective label. Let names be EARNED through the fiction.
+
+When you reference an already-established character in prose, refer to them the way the CURRENT character would — by name if known, by their label if not. Stay consistent with how this character sees them.
+
+═══════════════════════════════════════════
+OTHER RULES
+═══════════════════════════════════════════
+- Period-accurate 1937 New York. Specific texture — streetcar bells, the wrong cigarette, the smell of coal smoke, the price of a beer at McSorley's.
+- Facts are permanent. The ESTABLISHED FACTS list below is the immovable truth of this world. You may NOT contradict any fact, even one established in another character's thread. Different characters INTERPRET shared events differently — only the inner experience differs, not the external facts.
+- CHARACTER TIER: If they plausibly hold a piece of the conspiracy (weapon, letter, dangerous knowledge), their week is active danger. If they're ordinary (a child, a neighbour), do NOT invent a spy subplot. Their week is shaped by the city's tension but they're not in the plot. Their mayhem is domestic and emotional.
+- UNINTENDED COMPLICITY: A central possibility — a player acts innocently and later discovers they served the demonstration. Weave these moments into buildup beats NATURALLY. Never labeled. The realization arrives as consequence later, not as exposition now.
+- STADIUM AS GRAVITY: Most characters have authentic reasons to be at or near the stadium. If a player leaves it, honor that — but their week becomes quieter. Don't force them back.
+- No redemption arcs. No hidden hearts of gold. Reach for accumulated frustration, class resentment, unexamined patterns, exhaustion.
+
+═══════════════════════════════════════════
+CONTINUITY — DO NOT CONTRADICT, DO NOT RE-STAGE
+═══════════════════════════════════════════
+You will be given the verbatim prose of the most recent beats. Treat them as ground truth and continue seamlessly from the END of the most recent one.
+- NEVER re-stage or re-introduce a scene already in progress. If the character is already standing at the newsstand talking to the vendor, the next beat continues that conversation from where it stands — it does NOT walk them up to the counter again as if arriving fresh.
+- NEVER contradict an established detail. If the vendor was a devoted Yankees fan two paragraphs ago, he is a devoted Yankees fan now. If someone was inside the bar, they are still inside the bar. Positions, loyalties, moods, and facts persist.
+- People keep their established personalities, allegiances, and speech patterns across every beat. A character does not flip from one stance to its opposite.
+- Capture durable truths as FACTS so they persist permanently. In the "facts" array, record not just plot events but anything that must stay consistent later: a person's allegiance ("the newsstand vendor is a devoted Yankees fan"), a relationship ("Sullivan is Danny's longtime partner"), a physical fact ("the bar's back room is down a narrow stair"), a commitment ("Danny is assigned to gate detail at the Polo Grounds tonight"). Short, declarative, specific. These become immovable truth for every future beat and every other character.
+${staminaInstruction(char.stamina)}
+
+OUTPUT valid JSON only:
+{
+  "dayLabel":"string",
+  "title":"string (4–7 evocative words)",
+  "prose":"string (a tight scene — usually ONE short paragraph, two at most; every sentence advances something; use \\n\\n between paragraphs)",
+  "slept":false,
+  "nextDay":null,
+  "characterFate":null,
+  "facts":["string — durable truths established this beat: events AND character allegiances, relationships, physical details, commitments"],
+  "people":[{"realName":"string (their true full name)","label":"string (how THIS character perceives/refers to them right now)","nameKnownToViewer":false,"role":"string","traits":["string","string"]}],
+  "ripples":["string"]
+}`;
+
+  const user=`${ANCHORS}\nALL CHARACTERS:\n${allChars}\n══════════════\nESTABLISHED FACTS — IMMOVABLE TRUTH OF THIS WORLD. Every fact below HAS HAPPENED, regardless of which character's thread established it. This beat must be consistent with every one of them:\n${allFacts}\n══════════════\nCHARACTER: ${char.name} (${char.role})${char.traits.length?' — '+char.traits.join(', '):''}
+Day: ${char.currentDay||'Tuesday'}\nTHREAD:\n${thread}${antiRepeat}${arcSummary}\nDIRECTION: ${dir}`;
+
+  try{
+    const res=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+      body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:sys},{role:'user',content:user}],temperature:0.93,max_tokens:1400,response_format:{type:"json_object"}})
+    });
+    const data=await res.json();
+    if(data.error) throw new Error(data.error.message);
+    const beat=JSON.parse(data.choices?.[0]?.message?.content?.replace(/```json|```/g,'')||'{}');
+    beat.id=uid();beat.intent=intent||null;
+
+    const bArr=W.beats[activeId];
+    // The past is fixed. You cannot branch from an earlier beat.
+    // If the player walked back to read, acting always continues from the true end of the thread.
+    char.activeIndex=bArr.length;
+    bArr.push(beat);char.activeIndex=bArr.length-1;
+    char.stamina=(char.stamina||0)+2;
+    if(beat.slept)processSleep(activeId,beat.nextDay);
+    // Update this character's clock from the beat, and push the world clock forward (the tide rises).
+    {
+      const pc=parseClock(beat.dayLabel,char.currentDay,char.currentPeriod);
+      char.currentDay=pc.day; char.currentPeriod=pc.period;
+      advanceWorldClock(pc.day,pc.period);
+    }
+    (beat.facts||[]).forEach(f=>addFact(f,char.name,beat.dayLabel||'',beat.title||''));
+    // Process permanent character fate — death, jail, hospital. No take-backs.
+    if(beat.characterFate&&['dead','imprisoned','hospitalized'].includes(beat.characterFate)){
+      char.fate=beat.characterFate;
+      char.fateDay=beat.dayLabel||char.currentDay||'';
+      const fateText={
+        dead:`${char.name} died (${char.fateDay}). They are gone from the world.`,
+        imprisoned:`${char.name} was arrested and is in custody (${char.fateDay}). They will not be free this week.`,
+        hospitalized:`${char.name} was hospitalized (${char.fateDay}) and cannot act for the rest of the week.`
+      }[beat.characterFate];
+      addFact(fateText,char.name,beat.dayLabel||'',beat.title||'');
+    }
+    (beat.people||[]).forEach(p=>{
+      const realName=p.realName||p.name||'';
+      if(!realName) return;
+      const pid=addChar(realName,p.role||'',p.traits||[],char.name);
+      if(pid&&pid!==activeId){
+        // Record how the current character perceives this person
+        if(p.nameKnownToViewer){
+          earnName(activeId,pid);
+        }else if(p.label){
+          setLabel(activeId,pid,p.label);
+        }
+        recordConn(activeId,pid,beat.title||'');
+      }
+    });
+    (beat.ripples||[]).forEach(r=>addRipple(r,char.name,beat.people||[]));
+    save();refreshMeta(char);renderRail();renderBeats();
+  }catch(err){
+    if(es){es.style.display='block';es.textContent='Error: '+(err.message||'Check API key.');}
+  }finally{
+    isGen=false;if(gs)gs.style.display='none';setUI(true);
+  }
+}
+
+// ══════════════════════════════════════════════════
+// SKIP AHEAD
+// ══════════════════════════════════════════════════
+function openSkipModal(){
+  const el=document.getElementById('skip-modal');
+  if(!el) return;
+  document.getElementById('skip-input').value='';
+  el.classList.add('open');
+  setTimeout(()=>document.getElementById('skip-input').focus(),100);
+}
+function closeSkipModal(){
+  const el=document.getElementById('skip-modal');
+  if(el) el.classList.remove('open');
+}
+function confirmSkip(){
+  const dir=document.getElementById('skip-input').value.trim();
+  if(!dir) return;
+  closeSkipModal();
+  generateSkip(dir);
+}
+
+async function generateSkip(direction){
+  if(isGen) return;
+  const apiKey=localStorage.getItem('lateral_apikey');
+  if(!apiKey){openSettings();return;}
+  const char=W.chars.find(c=>c.id===activeId);
+  if(!char) return;
+
+  isGen=true;setUI(false);
+  const gs=document.getElementById('gen-status');
+  const es=document.getElementById('err-status');
+  if(gs){gs.style.display='block';gs.innerHTML='skipping ahead<span>...</span>';}
+  if(es)es.style.display='none';
+
+  const beats=W.beats[activeId]||[];
+  const current=beats[char.activeIndex];
+  const allChars=W.chars.map(c=>`- ${c.name} (${c.role})${c.traits.length?': '+c.traits.join(', '):''}`)
+    .join('\n')||'None.';
+  const allFacts=factsForPrompt();
+  const thread=beats.length
+    ?beats.map((b,i)=>`[${b.dayLabel}] "${b.title||''}"${i===char.activeIndex?' ←':''}`)
+      .join('\n')
+    :'No moments yet.';
+
+  const sys=`You are generating a fast-forward arc for a character in a 1937 New York narrative game.
+
+Generate exactly 3 beats covering the player's direction. Think of it as a compressed montage — each beat is one chosen frame because something specific happens in it. Together they cover the ground. The player lands at the end ready to continue.
+
+BEAT QUALITY: Each beat must be alive. Mundane is fine — specific ordinary detail that reveals character. Vague filler is not. "He waited" is nothing. "He counted the rivets on the gate for the third time" is everything. Turns should happen often — a decision, a realisation, something that shifts.
+
+Each beat: 2–3 sentences. Period-accurate 1937 New York. No contradicting world anchors. No redemption arcs.
+${staminaInstruction(char.stamina)}
+
+OUTPUT valid JSON only — an object with a "beats" array of exactly 3 beats:
+{
+ "beats": [
+  {
+    "dayLabel":"string",
+    "title":"string (4–7 words)",
+    "prose":"string (2–3 sentences)",
+    "slept":false,
+    "nextDay":null,
+    "facts":["string"],
+    "people":[{"realName":"string","label":"string","nameKnownToViewer":false,"role":"string","traits":["string","string"]}],
+    "ripples":["string"]
+  }
+ ]
+}`;
+
+  const user=`${ANCHORS}
+ALL CHARACTERS:\n${allChars}
+FACTS:\n${allFacts}
+CHARACTER: ${char.name} (${char.role})${char.traits.length?' — '+char.traits.join(', '):''}
+Day: ${char.currentDay||'Tuesday'}
+THREAD:\n${thread}
+SKIP DIRECTION: "${direction}"
+Current moment: ${current?`[${current.dayLabel}] "${current.title||''}"`:' start of week'}`;
+
+  try{
+    const res=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+      body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:sys},{role:'user',content:user}],temperature:0.93,max_tokens:1200,response_format:{type:"json_object"}})
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
+    const parsed=JSON.parse(data.choices?.[0]?.message?.content?.replace(/```json|```/g,'').trim()||'{}');
+    const newBeats=Array.isArray(parsed)?parsed:(parsed.beats||[]);
+
+    const bArr=W.beats[activeId];
+    // The past is fixed — skip-ahead always continues from the true end of the thread.
+    char.activeIndex=bArr.length-1;
+
+    newBeats.forEach(beat=>{
+      beat.id=uid();
+      beat.intent=direction;
+      beat.isSkip=true;
+      bArr.push(beat);
+      char.stamina=(char.stamina||0)+1;
+      if(beat.slept)processSleep(activeId,beat.nextDay);
+      {
+        const pc=parseClock(beat.dayLabel,char.currentDay,char.currentPeriod);
+        char.currentDay=pc.day; char.currentPeriod=pc.period;
+        advanceWorldClock(pc.day,pc.period);
+      }
+      (beat.facts||[]).forEach(f=>addFact(f,char.name,beat.dayLabel||'',beat.title||''));
+      (beat.people||[]).forEach(p=>{
+        const realName=p.realName||p.name||'';
+        if(!realName) return;
+        const pid=addChar(realName,p.role||'',p.traits||[],char.name);
+        if(pid&&pid!==activeId){
+          if(p.nameKnownToViewer){earnName(activeId,pid);}
+          else if(p.label){setLabel(activeId,pid,p.label);}
+          recordConn(activeId,pid,beat.title||'');
+        }
+      });
+      (beat.ripples||[]).forEach(r=>addRipple(r,char.name,beat.people||[]));
+    });
+
+    char.activeIndex=bArr.length-1;
+    save();refreshMeta(char);renderRail();renderBeats();
+
+  }catch(err){
+    if(es){es.style.display='block';es.textContent='Error: '+(err.message||'Check API key.');}
+  }finally{
+    isGen=false;
+    if(gs)gs.style.display='none';
+    setUI(true);
+  }
+}
+
+// ══════════════════════════════════════════════════
+// MEMORY
+// ══════════════════════════════════════════════════
+function openMemLane(){document.getElementById('mem-col').classList.remove('closed');}
+function closeMemLane(){document.getElementById('mem-col').classList.add('closed');}
+
+function renderMemLane(){
+  const inner=document.getElementById('mem-inner');inner.innerHTML='';
+  const mems=W.memories[activeId]||[];
+  if(!mems.length){inner.innerHTML='<div style="font-family:var(--body);font-size:13px;font-style:italic;color:var(--mem-dim);padding:8px 0">Surfacing...</div>';return;}
+  mems.forEach((m,i)=>{
+    const div=document.createElement('div');
+    div.className='mem-beat'+(i===mems.length-1?' deepest':'');
+    div.innerHTML=`<div class="mem-era">${esc(m.era||'')}</div><div class="mem-title">${esc(m.title||'')}</div><div class="mem-prose">${fmtProse(m.prose||'')}</div>`;
+    inner.appendChild(div);
+    if(i<mems.length-1){const sep=document.createElement('div');sep.style.cssText='border-top:1px solid var(--mem-border);margin:8px 0';inner.appendChild(sep);}
+  });
+  const dl=document.getElementById('mem-depth');
+  if(dl)dl.textContent=mems.length+' layer'+(mems.length!==1?'s':'')+' deep';
+  setTimeout(()=>{const s=document.querySelector('.mem-scroll');if(s)s.scrollTop=s.scrollHeight;},100);
+}
+
+async function generateMemory(){
+  if(isMemGen) return;
+  const apiKey=localStorage.getItem('lateral_apikey');
+  if(!apiKey){openSettings();return;}
+  const char=W.chars.find(c=>c.id===activeId);if(!char)return;
+  isMemGen=true;
+  const btn=document.getElementById('deeper-btn');
+  const gs=document.getElementById('mem-gen');
+  if(btn)btn.disabled=true;if(gs)gs.style.display='block';
+  const mems=W.memories[activeId]||[];
+  const existing=mems.length?mems.map(m=>`[${m.era}] "${m.title}"\n${m.prose.slice(0,120)}...`).join('\n\n'):'None.';
+  const current=(W.beats[activeId]||[])[char.activeIndex];
+  const deeper=mems.length?`Go DEEPER — further back than [${mems[mems.length-1].era}]. No floor. Childhood. A generation before if needed.`:`Surface the first memory. Specific scene, 3 paragraphs, sensory. 1937 or earlier.`;
+  try{
+    const res=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+      body:JSON.stringify({model:'gpt-4o',messages:[
+        {role:'system',content:`You are surfacing a memory for a character in 1937 New York. FLASHBACK — read only. Fixed past. No choices. 3 paragraphs, sensory, specific. No redemption. Ordinary unglamorous cause. CONSISTENCY: This memory may NOT contradict any existing world fact listed below. If another character witnessed the same event, the objective facts match exactly — only the subjective experience differs. OUTPUT valid JSON only: {"era":"string","title":"string","prose":"string","facts":["string"]}`},
+        {role:'user',content:`CHARACTER: ${char.name} (${char.role})\nPresent: ${current?`[${current.dayLabel}] "${current.title||''}"`:' start of week'}\nESTABLISHED WORLD FACTS:\n${factsForPrompt()}\nMemories:\n${existing}\n\n${deeper}`}
+      ],temperature:0.95,max_tokens:900,response_format:{type:"json_object"}})
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
+    const mem=JSON.parse(data.choices?.[0]?.message?.content?.replace(/```json|```/g,'')||'{}');
+    mem.id=uid();
+    if(!W.memories[activeId])W.memories[activeId]=[];
+    W.memories[activeId].push(mem);
+    (mem.facts||[]).forEach(f=>addFact(f,char.name,mem.era||'a memory',mem.title||''));
+    save();renderMemLane();
+  }catch(err){
+    const inner=document.getElementById('mem-inner');
+    if(inner)inner.innerHTML+=`<div style="font-family:var(--type);font-size:9px;color:var(--red);padding:6px 0">Error: ${esc(err.message)}</div>`;
+  }finally{
+    isMemGen=false;if(btn)btn.disabled=false;if(gs)gs.style.display='none';
+  }
+}
+
+function goDeeper(){generateMemory();}
+
+// ══════════════════════════════════════════════════
+// RIPPLES
+// ══════════════════════════════════════════════════
+function addRipple(text,fromName,people){
+  const names=(people||[]).map(p=>p.realName||p.name).filter(Boolean);
+  W.ripples.unshift({id:uid(),text,fromName,charNames:names});
+  if(W.ripples.length>60)W.ripples.pop();
+  // Ripples are world facts — they must propagate to every character's future beats
+  addFact(text,fromName,'','ripple');
+  save();renderRipples();
+}
+
+function renderRipples(){
+  const scroll=document.getElementById('ripple-scroll');
+  const empty=document.getElementById('ripple-empty');
+  // Always clear old entries first — fixes leftover ripples surviving a reset
+  scroll.querySelectorAll('.ripple-entry').forEach(e=>e.remove());
+  if(!W.ripples.length){if(empty)empty.style.display='block';return;}
+  if(empty)empty.style.display='none';
+  W.ripples.slice(0,40).forEach(r=>{
+    const div=document.createElement('div');div.className='ripple-entry';
+    const chips=r.charNames.map(n=>{
+      const c=W.chars.find(x=>x.name.toLowerCase()===n.toLowerCase());
+      if(!c)return '';
+      return `<span class="ripple-chip" onclick="selectChar('${c.id}')">${esc(n.split(' ')[0])}</span>`;
+    }).filter(Boolean).join('');
+    div.innerHTML=`<div class="ripple-from">${esc(r.fromName||'')}</div><div class="ripple-text">${esc(r.text)}</div>${chips?`<div class="ripple-chips">${chips}</div>`:''}`;
+    scroll.appendChild(div);
+  });
+}
+
+// ══════════════════════════════════════════════════
+// TTS
+// ══════════════════════════════════════════════════
+function toggleTTS(){
+  if(ttsActive){window.speechSynthesis.cancel();ttsActive=false;document.getElementById('tts-btn').textContent='▶ aloud';return;}
+  const char=W.chars.find(c=>c.id===activeId);if(!char)return;
+  const beat=(W.beats[activeId]||[])[char.activeIndex];if(!beat)return;
+  const utt=new SpeechSynthesisUtterance(beat.prose.replace(/\n+/g,' '));
+  utt.rate=0.9;
+  utt.onend=()=>{ttsActive=false;document.getElementById('tts-btn').textContent='▶ aloud';};
+  window.speechSynthesis.speak(utt);ttsActive=true;
+  document.getElementById('tts-btn').textContent='◼ stop';
+}
+
+// ══════════════════════════════════════════════════
+// MODALS / RESET
+// ══════════════════════════════════════════════════
+function openSettings(){document.getElementById('api-field').value=localStorage.getItem('lateral_apikey')||'';document.getElementById('key-ok').style.display='none';document.getElementById('settings-modal').classList.add('open');}
+function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
+function saveKey(){localStorage.setItem('lateral_apikey',document.getElementById('api-field').value.trim());document.getElementById('key-ok').style.display='block';}
+function openAddModal(){document.getElementById('add-modal').classList.add('open');}
+function closeAddModal(){document.getElementById('add-modal').classList.remove('open');}
+function confirmAdd(){
+  const name=document.getElementById('add-name').value.trim();
+  const role=document.getElementById('add-role').value.trim();
+  if(!name)return;
+  const id=addChar(name,role||'present in this week',[],null);
+  closeAddModal();
+  document.getElementById('add-name').value='';document.getElementById('add-role').value='';
+  renderRail();selectChar(id);
+}
+function resetWorld(){
+  if(!confirm('Erase this world entirely?'))return;
+  W={chars:[],beats:{},memories:{},facts:[],ripples:[],connections:{},prelude:'',clockDay:'Tuesday',clockPeriod:'morning'};
+  save();activeId=null;
+  window.speechSynthesis&&window.speechSynthesis.cancel();ttsActive=false;
+  resetTheme();
+  document.getElementById('tts-btn').style.display='none';
+  document.getElementById('col-head').style.display='none';
+  document.getElementById('intent-bar').style.display='none';
+  document.getElementById('beats-container').innerHTML='';
+  closeMemLane();renderRail();renderRipples();
+
+  // Reset and replay title sequence
+  const seq=document.getElementById('screen-title');
+  seq.style.display='flex';
+  seq.style.opacity='1';
+  seq.style.transition='';
+  document.getElementById('title-collage').style.opacity='0';
+  document.querySelectorAll('#title-lines .title-line').forEach(l=>{
+    l.classList.remove('visible');
+    l.style.animation='';
+  });
+  showScreen('screen-home');
+  setTimeout(runTitleSequence,400);
+}
+
+// ══════════════════════════════════════════════════
+// TITLE SEQUENCE
+// ══════════════════════════════════════════════════
+function runTitleSequence(){
+  const lines=document.querySelectorAll('#title-lines .title-line');
+  lines.forEach(line=>{
+    const delay=parseInt(line.dataset.delay)||0;
+    setTimeout(()=>{
+      line.classList.add('visible');
+    },delay);
+  });
+
+  // Collage blooms in behind the text after "They're wrong."
+  setTimeout(()=>{
+    document.getElementById('title-collage').style.opacity='1';
+  },9200);
+
+  // "Come in" pulses subtly after it appears
+  setTimeout(()=>{
+    const inv=document.querySelector('.title-line.size-invitation');
+    if(inv){
+      inv.style.animation='invitePulse 2.5s ease-in-out infinite';
+    }
+  },14200);
+}
+
+// Add the pulse animation dynamically
+const pulseStyle=document.createElement('style');
+pulseStyle.textContent=`
+@keyframes invitePulse{
+  0%,100%{opacity:.7;letter-spacing:5px}
+  50%{opacity:1;letter-spacing:7px}
+}`;
+document.head.appendChild(pulseStyle);
+
+function endTitleSequence(){
+  const seq=document.getElementById('screen-title');
+  seq.style.transition='opacity 1.2s ease';
+  seq.style.opacity='0';
+  setTimeout(()=>{
+    seq.style.display='none';
+    // Home page was already active underneath
+  },1200);
+  // Mark as seen so it never runs again this session
+  sessionStorage.setItem('lateral_intro_seen','1');
+}
+
+// ══════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════
+function init(){
+  load();
+
+  // If returning player with existing world, skip title and go straight to game
+  if(W.chars.length>0){
+    document.getElementById('screen-title').style.display='none';
+    showScreen('screen-game');
+    renderRail();renderRipples();selectChar(W.chars[0].id);
+    return;
+  }
+
+  // First time or reset — show home underneath, run title sequence
+  showScreen('screen-home');
+  document.getElementById('screen-title').style.display='flex';
+
+  // Small delay then start sequence
+  setTimeout(runTitleSequence,300);
+}
+init();
+</script>
+</body>
+</html>
