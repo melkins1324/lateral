@@ -858,6 +858,26 @@ async function enforceBaseball(beat,sys,user,apiKey){
   }catch(e){ return beat; }
 }
 
+// ── STORY DIRECTOR — a gentle current, never a leash ───────────────
+// Supplies each ongoing forward beat with a soft forward-vector derived from the
+// calendar phase. The player can ALWAYS go anywhere; this only provides gravity
+// when they don't steer, and it is explicitly forbidden to railroad.
+function storyDirector(char){
+  const idx=DAYS.indexOf((char&&char.currentDay)||W.clockDay||'Tuesday');
+  let phase,pull;
+  if(idx<=DAYS.indexOf('Wednesday')){
+    phase='the buildup (Tue–Wed, before the fracture)';
+    pull='the ballpark and the coming game and the ordinary business of the day — while underneath it, unnamed and unnoticed by nearly everyone, something in the city is being quietly set in motion';
+  }else if(idx===DAYS.indexOf('Thursday')){
+    phase='Thursday — the day it breaks';
+    pull='the stadium and Game 7; this is the day of the demonstration and the shooting';
+  }else{
+    phase='the aftermath (Fri–Sun)';
+    pull='the fallout moving through the city — what people saw, what is quietly being covered up, what is being turned into a story';
+  }
+  return `THE CURRENT — a gentle pull, NEVER a leash. It is ${phase}. The natural gravity of the day leans toward ${pull}. RULES: (1) If the player gives ANY clear direction, follow it ANYWHERE — even far from all of that — and honor it completely; their day simply moves the way they chose. (2) If the player is vague, passive, or silent, let the current carry them one concrete step toward that gravity. (3) NEVER block them, NEVER railroad, NEVER invent a coincidence or contrivance to force them back toward the story. The storyline is an invitation the world keeps quietly offering — not a track the player is stuck on.`;
+}
+
 let activeId=null,isGen=false,isMemGen=false,ttsActive=false;
 const uid=()=>'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const load=()=>{const s=localStorage.getItem('lateral_v7');if(s)try{W=JSON.parse(s)}catch(e){}migrateFacts();migrateNaming();};
@@ -1823,6 +1843,8 @@ async function generateBeat(direction,jumpCtx,intent){
   }else if(direction==='jump'){
     dir=`Seen in another person's thread at [${jumpCtx?.dayLabel||'this moment'}]: "${jumpCtx?.title||''}". Generate THEIR inner experience of that same external moment. Same external facts. Completely different inner life.`;
   }
+  // The story is a current, not a rail: nudge ongoing forward beats toward the day's gravity, never force.
+  if(direction==='forward' && beats.length) dir += '\n\n'+storyDirector(char);
 
   const sys=`You are writing one beat in a character's week for a 1937 New York narrative game. The week has three phases:
  - BUILDUP (Tuesday–Wednesday): The week before. Something is being set in motion in the city around the World Series. The Bund is moving pieces. Cops are uneasy. Reporters smell rumors. But NOTHING is named yet. First-time players have no idea what is coming. NEVER spoil the shooting in buildup beats. Only hint, only weave, only let tension build. Game 6 is Tuesday night. The Giants WIN Game 6, forcing Game 7 on Thursday — this is a fixed fact of the world.
