@@ -1517,7 +1517,7 @@ async function generateMemoryFromIntent(intent){
     if(!W.memories[activeId])W.memories[activeId]=[];
     W.memories[activeId].push(mem);
     // Lock facts into world state permanently, attributed to this character
-    (mem.facts||[]).forEach(f=>addFact(f,char.name,mem.era||'a memory',mem.title||''));
+    (mem.facts||[]).forEach(f=>addFact(f,char.name,mem.era||'a memory',mem.title||'','soft'));
     save();
     renderMemLane();
   }catch(err){
@@ -1608,8 +1608,11 @@ function recordConn(a,b,ctx){
 // Old saves stored facts as plain strings — migrate on load.
 function migrateFacts(){
   if(!W.facts) { W.facts=[]; return; }
-  W.facts=W.facts.map(f=>{
-    if(typeof f==='string') return {text:f,source:'the world',day:'',beatTitle:''};
+  W.facts=W.facts.map((f,i)=>{
+    if(typeof f==='string') f={text:f,source:'the world',day:'',beatTitle:''};
+    if(f.kind===undefined) f.kind='canon';
+    if(f.t===undefined) f.t=i;
+    if(f.fate===undefined) f.fate=/\bdied\b|\bin custody\b|\bhospitalized\b|was arrested/i.test(f.text||'');
     return f;
   });
 }
@@ -1627,7 +1630,7 @@ function migrateNaming(){
   });
 }
 
-function addFact(text,sourceName,day,beatTitle){
+function addFact(text,sourceName,day,beatTitle,kind){
   if(!text||typeof text!=='string') return;
   // Don't add a duplicate (same text)
   if(W.facts.find(f=>(f.text||'').toLowerCase().trim()===text.toLowerCase().trim())) return;
@@ -1635,17 +1638,34 @@ function addFact(text,sourceName,day,beatTitle){
     text:text.trim(),
     source:sourceName||'the world',
     day:day||'',
-    beatTitle:beatTitle||''
+    beatTitle:beatTitle||'',
+    kind:kind==='soft'?'soft':'canon',        // ripples & memory-flashbacks are SOFT, not immovable canon
+    fate:/\bdied\b|\bin custody\b|\bhospitalized\b|was arrested/i.test(text), // load-bearing — never dropped
+    t:W.facts.length                          // insertion order, for recency
   });
 }
 
 // Format facts for the AI prompt — with attribution so it knows who established what
 function factsForPrompt(){
   if(!W.facts.length) return 'None established.';
-  return W.facts.map(f=>{
-    const src=f.source&&f.source!=='the world'?` [established in ${f.source}'s thread${f.day?', '+f.day:''}]`:'';
-    return `- ${f.text}${src}`;
-  }).join('\n');
+  const CAP=30;
+  const scored=W.facts.map((f,i)=>{
+    const t=(f.t!=null?f.t:i);
+    let s=(t*0.01);                        // recency tiebreak
+    if(f.fate) s+=1000;                     // fates are load-bearing — always keep
+    if((f.kind||'canon')==='canon') s+=100; // hard canon over soft (ripples/memories)
+    return {f,s,t};
+  }).sort((a,b)=>b.s-a.s);
+  const kept=scored.slice(0,CAP);
+  // Present hard canon first, then soft, each in chronological order.
+  kept.sort((a,b)=>(((a.f.kind==='soft')-(b.f.kind==='soft'))||(a.t-b.t)));
+  const lines=kept.map(({f})=>{
+    const src=f.source&&f.source!=='the world'?` [${f.source}${f.day?', '+f.day:''}]`:'';
+    const soft=(f.kind==='soft')?' (subjective — as remembered or rippled, not hard canon)':'';
+    return `- ${f.text}${src}${soft}`;
+  });
+  const dropped=scored.length-kept.length;
+  return lines.join('\n')+(dropped>0?`\n(…and ${dropped} older minor detail(s) omitted to keep the load-bearing facts in focus.)`:'');
 }
 
 // ══════════════════════════════════════════════════
@@ -2270,7 +2290,7 @@ async function generateMemory(){
     mem.id=uid();
     if(!W.memories[activeId])W.memories[activeId]=[];
     W.memories[activeId].push(mem);
-    (mem.facts||[]).forEach(f=>addFact(f,char.name,mem.era||'a memory',mem.title||''));
+    (mem.facts||[]).forEach(f=>addFact(f,char.name,mem.era||'a memory',mem.title||'','soft'));
     save();renderMemLane();
   }catch(err){
     const inner=document.getElementById('mem-inner');
@@ -2290,7 +2310,7 @@ function addRipple(text,fromName,people){
   W.ripples.unshift({id:uid(),text,fromName,charNames:names});
   if(W.ripples.length>60)W.ripples.pop();
   // Ripples are world facts — they must propagate to every character's future beats
-  addFact(text,fromName,'','ripple');
+  addFact(text,fromName,'','ripple','soft');
   save();renderRipples();
 }
 
