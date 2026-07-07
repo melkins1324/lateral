@@ -1060,6 +1060,87 @@ OUTPUT valid JSON only — exact same shape as the examples:
 }
 
 // ══════════════════════════════════════════════════
+// AGENDA — the character's own day, as data (never a rail)
+// ══════════════════════════════════════════════════
+// The story felt inert because "advance the day" had nothing concrete to advance TOWARD.
+// This gives each character a small queue of real obligations — the shape of their week —
+// generated once and cached. When the player is PASSIVE, a forward beat discharges the next
+// due item (see generateBeat's passive branch). When the player gives ANY real instruction,
+// the agenda is ignored entirely and we follow them anywhere. A skipped obligation just slides
+// or quietly goes missed — it NEVER pulls the player back. Same pattern as the baseball truth:
+// forward motion lives in code as data, not as a plea in the prompt.
+async function generateAgenda(char){
+  const apiKey=localStorage.getItem('lateral_apikey');
+  if(!apiKey) return [];
+
+  const sys=`You are giving a character in a 1937 New York narrative game the concrete SHAPE OF THEIR WEEK — the ordinary obligations of their own life. This is one week (Tuesday through Sunday) during the World Series. These are the things that pull this specific person through their days when no one is steering them: places they're due, people expecting them, tasks with a deadline, money owed or owing, the rhythm of their job and their relationships.
+
+RULES:
+- Make every item CONCRETE and specific to THIS person's life and job — a named place, a named person, a real task with a real stake. "Sign in at the 5th Precinct roll call; Sergeant Boyle marks latecomers" — not "do police work."
+- Give each item a small consequence if it's missed (someone waits, pay is docked, a debt grows, a chance is lost). That's what makes them pull.
+- These are the character's PRIVATE, ORDINARY life — NOT the plot, NOT the coming trouble at the ballpark, NOTHING ominous or political. Tuesday–Wednesday especially must stay completely mundane. The character has no idea anything is coming.
+- Spread them across the week, weighted toward Tuesday–Wednesday (most items there). A couple can fall Thursday–Sunday and may be looser and more human ("get word to your sister that you're alright", "collect what the shop still owes you") to fit an unsettled week.
+- 7 to 9 items. Chronological.
+
+OUTPUT valid JSON only:
+{ "agenda": [ { "day": "Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday", "period": "morning|afternoon|evening|night", "what": "one concrete sentence — the obligation and its small stake" } ] }`;
+
+  const user=`CHARACTER: ${char.name}\nROLE: ${char.role}\nTRAITS: ${char.traits&&char.traits.length?char.traits.join(', '):'unknown yet'}\nSETTING: 1937 New York, the week of the World Series (Yankees vs Giants). Write this person's ordinary week.`;
+
+  try{
+    const res=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+      body:JSON.stringify({
+        model:'gpt-4o',
+        messages:[{role:'system',content:sys},{role:'user',content:user}],
+        temperature:0.9,
+        max_tokens:900,
+        response_format:{type:"json_object"}
+      })
+    });
+    const data=await res.json();
+    if(data.error) throw new Error(data.error.message);
+    let raw=data.choices?.[0]?.message?.content||'';
+    raw=raw.replace(/```json|```/g,'').trim();
+    if(raw && raw[0]!=='{'){ const s=raw.indexOf('{'), e=raw.lastIndexOf('}'); if(s>=0&&e>s) raw=raw.slice(s,e+1); }
+    const parsed=JSON.parse(raw);
+    const list=Array.isArray(parsed.agenda)?parsed.agenda:[];
+    // Normalize + stamp bookkeeping fields. Drop anything malformed.
+    return list.map(it=>({
+      id:uid(),
+      day:DAYS.includes(it.day)?it.day:'Tuesday',
+      period:PERIODS.includes(it.period)?it.period:'morning',
+      what:(it.what||'').trim(),
+      done:false,
+      missed:false
+    })).filter(it=>it.what);
+  }catch(e){
+    console.warn('Agenda generation failed:',e.message);
+    return [];  // empty (but truthy-checked by caller via ||[]) — story falls back to the generic "advance the day" nudge
+  }
+}
+
+// Pick the obligation that should pull this character right now, relative to the world clock.
+// Prefers the freshest item already due; otherwise the soonest one coming up. Items that slid
+// more than a full day past without being done are quietly marked missed (they got away).
+// Returns null when the agenda is empty, exhausted, or missing — caller falls back gracefully.
+function nextAgendaItem(char){
+  if(!char.agenda||!char.agenda.length) return null;
+  const now=clockIndex(char.currentDay||'Tuesday',char.currentPeriod||'morning');
+  char.agenda.forEach(it=>{ if(!it.done && !it.missed && clockIndex(it.day,it.period) < now-4) it.missed=true; });
+  const live=char.agenda.filter(it=>!it.done && !it.missed);
+  if(!live.length) return null;
+  const due=live.filter(it=>clockIndex(it.day,it.period)<=now);
+  if(due.length){
+    due.sort((a,b)=>clockIndex(b.day,b.period)-clockIndex(a.day,a.period)); // freshest already-due
+    return due[0];
+  }
+  live.sort((a,b)=>clockIndex(a.day,a.period)-clockIndex(b.day,b.period));  // soonest upcoming
+  return live[0];
+}
+
+// ══════════════════════════════════════════════════
 // SCREENS
 // ══════════════════════════════════════════════════
 function showScreen(id){
@@ -1140,6 +1221,7 @@ function addChar(name,role,traits,appearedIn){
   if(ex) return ex.id;
   const id=uid();
   W.chars.push({id,name,role:role||'',traits:traits||[],appearedIn:appearedIn||null,activeIndex:0,stamina:0,currentDay:'Tuesday',currentPeriod:'morning',lastSyncedTo:0,theme:null,
+    agenda:null,          // the character's own day-shape: concrete obligations, generated once, discharged when the player is passive (see nextAgendaItem)
     realName:name,        // the true name, known to themselves
     knownAs:{},           // map: otherCharId -> what THIS character calls them (label or real name)
     nameKnown:{}          // map: otherCharId -> bool, has THIS character earned the other's real name
@@ -1849,16 +1931,27 @@ async function generateBeat(direction,jumpCtx,intent){
     ?`\nCHARACTER ARC SO FAR: This character has lived through ${beats.length} moments. Their thread so far suggests: ${beats.slice(-3).map(b=>b.title||'').filter(Boolean).join(' → ')}. The next beat must reflect that they have been changed — however subtly — by what has already happened. A person who has seen what Sal has seen does not think the same way they did at the start. Show the accumulation. Show what has settled into them, what they are carrying, what they now notice that they did not notice before.`
     :'';
 
+  let agendaItem=null;   // set only on a passive forward beat; marked done after the beat commits
   let dir='';
   if(direction==='forward'){
     if(!beats.length){
       dir=intent
         ?`Player intention: "${intent}". Honor fully. This is the OPENING SCENE — a BRIEF intro. It is Tuesday morning; Game 6 is tonight. This is the same morning the player just read about in the opening scene of the city:\n"""${(W.prelude||'').slice(0,700)}"""\nFind this person inside THAT morning, already in motion — mid-task, not waking up, not staring into space. Establish who they are through what they are DOING, fast. ONE short paragraph, two at most. No filler, no atmosphere for its own sake. End on motion or a real first choice. NO ominous tone; the shooting later this week has not happened and is not hinted at.`
         :`This is the OPENING SCENE — a BRIEF intro. It is Tuesday morning; Game 6 is tonight. This is the same morning the player just read about in the opening scene of the city:\n"""${(W.prelude||'').slice(0,700)}"""\nFind this person inside THAT morning, already in motion — working, traveling, handling a task. NOT waking up, NOT staring into the distance. Establish them fast through what they are doing. ONE short paragraph, two at most, vivid and economical — no filler, no scenery for its own sake. End on motion or a concrete first choice: somewhere to go, someone right there, something to do next. NO foreboding, NO politics — an ordinary exciting baseball-week morning. The shooting has not happened and must not be hinted at.`;
+    }else if(intent){
+      dir=`Player intention: "${intent}". Honor completely. Character attempts this — world responds through who they are. Write it TIGHT: one short paragraph, two at most. No filler, no atmosphere for its own sake, no small talk that goes nowhere. Get to what happens, land the result, stop at the next real decision. Time moves; the day advances. NEVER end on the character standing still wondering. Continue from [${current?.dayLabel||'now'}].`;
     }else{
-      dir=intent
-        ?`Player intention: "${intent}". Honor completely. Character attempts this — world responds through who they are. Write it TIGHT: one short paragraph, two at most. No filler, no atmosphere for its own sake, no small talk that goes nowhere. Get to what happens, land the result, stop at the next real decision. Time moves; the day advances. NEVER end on the character standing still wondering. Continue from [${current?.dayLabel||'now'}].`
-        :`No explicit intention — ADVANCE THE DAY. Move the character to the next real thing: the next errand, the next person, the next place, the pull toward tonight's game. Keep it SHORT — one tight paragraph. Something concrete changes. No padding, no scenery for its own sake. End on motion or a real choice. NEVER stall the character in place. Continue from [${current?.dayLabel||'now'}].`;
+      // PASSIVE turn: the player gave no direction, so the character's own day carries them.
+      // Generate the agenda once (cached on the char), then hand the model the next concrete
+      // obligation to discharge — a specific thing to advance TOWARD, not a plea into the void.
+      if(!char.agenda) char.agenda=await generateAgenda(char);
+      agendaItem=nextAgendaItem(char);
+      if(agendaItem){
+        const overdue=clockIndex(agendaItem.day,agendaItem.period) < clockIndex(char.currentDay||'Tuesday',char.currentPeriod||'morning');
+        dir=`No explicit intention from the player — so the CHARACTER'S OWN DAY pulls them forward, the way a real life does when no one is steering it. One concrete thing is ${overdue?'already past due and pressing on them':'the next real thing on their plate'}: ${agendaItem.what} (${agendaItem.day} ${agendaItem.period}). This beat, they move to it and it ACTUALLY HAPPENS — they get there, they deal with it, and it lands with a concrete result or a real complication. This is their own ordinary life, not a plot hook — keep it specific to who they are and don't force the week's larger events into it. Something is genuinely different by the end. One tight paragraph, two at most. Do NOT just pass time, do NOT drift through scenery, do NOT end on the character standing still. End on the result or the next real choice. Continue from [${current?.dayLabel||'now'}].`;
+      }else{
+        dir=`No explicit intention — ADVANCE THE DAY. Move the character to the next real thing: the next errand, the next person, the next place, the pull toward tonight's game. Keep it SHORT — one tight paragraph. Something concrete changes. No padding, no scenery for its own sake. End on motion or a real choice. NEVER stall the character in place. Continue from [${current?.dayLabel||'now'}].`;
+      }
     }
   }else if(direction==='jump'){
     dir=`Seen in another person's thread at [${jumpCtx?.dayLabel||'this moment'}]: "${jumpCtx?.title||''}". Generate THEIR inner experience of that same external moment. Same external facts. Completely different inner life.`;
@@ -2067,6 +2160,7 @@ Day: ${char.currentDay||'Tuesday'}\nTHREAD:\n${thread}${antiRepeat}${arcSummary}
     char.activeIndex=bArr.length;
     bArr.push(beat);char.activeIndex=bArr.length-1;
     char.stamina=(char.stamina||0)+2;
+    if(agendaItem) agendaItem.done=true;   // this passive beat discharged the obligation; it won't resurface
     if(beat.slept)processSleep(activeId,beat.nextDay);
     // Update this character's clock from the beat, and push the world clock forward (the tide rises).
     {
