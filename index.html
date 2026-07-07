@@ -1128,15 +1128,16 @@ OUTPUT valid JSON only:
 function nextAgendaItem(char){
   if(!char.agenda||!char.agenda.length) return null;
   const now=clockIndex(char.currentDay||'Tuesday',char.currentPeriod||'morning');
-  char.agenda.forEach(it=>{ if(!it.done && !it.missed && clockIndex(it.day,it.period) < now-4) it.missed=true; });
-  const live=char.agenda.filter(it=>!it.done && !it.missed);
+  // Once its moment has passed, an obligation is behind them — retire it so it never resurfaces
+  // or overrides a live thread. Story-opened threads are anchored at "now", so they survive.
+  char.agenda.forEach(it=>{ if(!it.done && clockIndex(it.day,it.period) < now) it.done=true; });
+  const live=char.agenda.filter(it=>!it.done);
   if(!live.length) return null;
-  const due=live.filter(it=>clockIndex(it.day,it.period)<=now);
-  if(due.length){
-    due.sort((a,b)=>clockIndex(b.day,b.period)-clockIndex(a.day,a.period)); // freshest already-due
-    return due[0];
-  }
-  live.sort((a,b)=>clockIndex(a.day,a.period)-clockIndex(b.day,b.period));  // soonest upcoming
+  live.sort((a,b)=>{
+    const d=clockIndex(a.day,a.period)-clockIndex(b.day,b.period);
+    if(d!==0) return d;                          // soonest first
+    return (b.fromStory?1:0)-(a.fromStory?1:0);  // at the same moment, a live story thread beats a routine errand
+  });
   return live[0];
 }
 
@@ -1221,7 +1222,8 @@ function addChar(name,role,traits,appearedIn){
   if(ex) return ex.id;
   const id=uid();
   W.chars.push({id,name,role:role||'',traits:traits||[],appearedIn:appearedIn||null,activeIndex:0,stamina:0,currentDay:'Tuesday',currentPeriod:'morning',lastSyncedTo:0,theme:null,
-    agenda:null,          // the character's own day-shape: concrete obligations, generated once, discharged when the player is passive (see nextAgendaItem)
+    agenda:null,          // the character's own day-shape: concrete obligations + story-opened threads (see nextAgendaItem / beat.opens)
+    agendaGenerated:false,// whether the pre-baked agenda has been generated yet (story-opened items can populate agenda before this)
     realName:name,        // the true name, known to themselves
     knownAs:{},           // map: otherCharId -> what THIS character calls them (label or real name)
     nameKnown:{}          // map: otherCharId -> bool, has THIS character earned the other's real name
@@ -1941,17 +1943,17 @@ async function generateBeat(direction,jumpCtx,intent){
     }else if(intent){
       dir=`Player intention: "${intent}". Honor completely. Character attempts this — world responds through who they are. Write it TIGHT: one short paragraph, two at most. No filler, no atmosphere for its own sake, no small talk that goes nowhere. Get to what happens, land the result, stop at the next real decision. Time moves; the day advances. NEVER end on the character standing still wondering. Continue from [${current?.dayLabel||'now'}].`;
     }else{
-      // PASSIVE turn: the player gave no direction, so the character's own day carries them.
-      // Generate the agenda once (cached on the char), then hand the model the next concrete
-      // obligation to discharge — a specific thing to advance TOWARD, not a plea into the void.
-      if(!char.agenda) char.agenda=await generateAgenda(char);
-      agendaItem=nextAgendaItem(char);
-      if(agendaItem){
-        const overdue=clockIndex(agendaItem.day,agendaItem.period) < clockIndex(char.currentDay||'Tuesday',char.currentPeriod||'morning');
-        dir=`No explicit intention from the player — so the CHARACTER'S OWN DAY pulls them forward, the way a real life does when no one is steering it. One concrete thing is ${overdue?'already past due and pressing on them':'the next real thing on their plate'}: ${agendaItem.what} (${agendaItem.day} ${agendaItem.period}). This beat, they move to it and it ACTUALLY HAPPENS — they get there, they deal with it, and it lands with a concrete result or a real complication. This is their own ordinary life, not a plot hook — keep it specific to who they are and don't force the week's larger events into it. Something is genuinely different by the end. One tight paragraph, two at most. Do NOT just pass time, do NOT drift through scenery, do NOT end on the character standing still. End on the result or the next real choice. Continue from [${current?.dayLabel||'now'}].`;
-      }else{
-        dir=`No explicit intention — ADVANCE THE DAY. Move the character to the next real thing: the next errand, the next person, the next place, the pull toward tonight's game. Keep it SHORT — one tight paragraph. Something concrete changes. No padding, no scenery for its own sake. End on motion or a real choice. NEVER stall the character in place. Continue from [${current?.dayLabel||'now'}].`;
+      // PASSIVE turn. CONTINUITY FIRST: continue whatever thread the last beat opened.
+      // The pre-baked day (generated once, cached) is only the fallback when the character is
+      // at a loose end. Story-opened threads live at the FRONT of the agenda (see beat.opens
+      // handling below), so nextAgendaItem surfaces them ahead of routine errands.
+      if(!char.agendaGenerated){
+        const gen=await generateAgenda(char);
+        char.agenda=(char.agenda||[]).concat(gen);
+        char.agendaGenerated=true;
       }
+      agendaItem=nextAgendaItem(char);
+      dir=`No explicit intention from the player — so the character keeps moving under their own momentum. FIRST, look at the MOST RECENT beat: if it left ANY open thread — a commitment they just made, an errand they set out on, someone they said they'd go see, an interview they lined up, a lead or question they just raised — CONTINUE THAT THREAD and carry it to its next real result. Do NOT drop, forget, or detour away from something the story just set in motion; follow through on it. ${agendaItem?`ONLY if the character is genuinely at a loose end with nothing open does their ordinary day carry them to the next thing on their plate: ${agendaItem.what} (${agendaItem.day} ${agendaItem.period}).`:''} Either way: one tight paragraph (two at most), something concrete changes, and it ends on a result or a real next choice — never stall, never merely pass time, never end on the character standing still. Continue from [${current?.dayLabel||'now'}].`;
     }
   }else if(direction==='jump'){
     dir=`Seen in another person's thread at [${jumpCtx?.dayLabel||'this moment'}]: "${jumpCtx?.title||''}". Generate THEIR inner experience of that same external moment. Same external facts. Completely different inner life.`;
@@ -2134,6 +2136,7 @@ OUTPUT valid JSON only:
   "slept":false,
   "nextDay":null,
   "characterFate":null,
+  "opens":"string — if this beat sets up a clear NEXT ACTION the character now intends (an errand they've begun, a person they resolved to go see, an interview they lined up, a promise they made, a lead they mean to chase), say it in a few concrete words so their story continues from it — e.g. 'interview Kleinman's daughter about the raffle ticket'. Empty string if the beat opened nothing.",
   "facts":["string — durable truths established this beat: events AND character allegiances, relationships, physical details, commitments"],
   "people":[{"realName":"string (their true full name)","label":"string (how THIS character perceives/refers to them right now)","nameKnownToViewer":false,"role":"string","traits":["string","string"]}],
   "ripples":["string"]
@@ -2160,13 +2163,20 @@ Day: ${char.currentDay||'Tuesday'}\nTHREAD:\n${thread}${antiRepeat}${arcSummary}
     char.activeIndex=bArr.length;
     bArr.push(beat);char.activeIndex=bArr.length-1;
     char.stamina=(char.stamina||0)+2;
-    if(agendaItem) agendaItem.done=true;   // this passive beat discharged the obligation; it won't resurface
     if(beat.slept)processSleep(activeId,beat.nextDay);
     // Update this character's clock from the beat, and push the world clock forward (the tide rises).
     {
       const pc=parseClock(beat.dayLabel,char.currentDay,char.currentPeriod);
       char.currentDay=pc.day; char.currentPeriod=pc.period;
       advanceWorldClock(pc.day,pc.period);
+    }
+    // CONTINUITY AS DATA: if this beat set up a next action, make it the character's top pending
+    // obligation (anchored at their new "now"), so the next passive beat continues it instead of
+    // drifting to a routine errand. Only the latest open thread stays live.
+    if(typeof beat.opens==='string' && beat.opens.trim()){
+      if(!char.agenda) char.agenda=[];
+      char.agenda.forEach(it=>{ if(it.fromStory && !it.done) it.done=true; });
+      char.agenda.unshift({id:uid(),day:char.currentDay||'Tuesday',period:char.currentPeriod||'morning',what:beat.opens.trim(),done:false,fromStory:true});
     }
     (beat.facts||[]).forEach(f=>addFact(f,char.name,beat.dayLabel||'',beat.title||''));
     // Process permanent character fate — death, jail, hospital. No take-backs.
