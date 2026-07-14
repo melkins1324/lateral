@@ -1354,7 +1354,7 @@ async function selectChar(id){
   document.getElementById('thread-scroll').scrollTop=document.getElementById('thread-scroll').scrollHeight;
 
   const existingBeats=W.beats[char.id]||[];
-  if(char.fate){ setUI(true); return; }
+  if(char.fate==='dead'){ setUI(true); return; }  // only death is read-only; the confined can still be played
 
   // Has the world already begun? (Any thread anywhere has at least one beat.)
   const worldStarted=W.chars.some(c=>(W.beats[c.id]||[]).length>0);
@@ -1401,8 +1401,9 @@ async function selectChar(id){
 function refreshMeta(char){
   if(char.fate){
     const fateLabel={dead:'✝ deceased',imprisoned:'in custody',hospitalized:'hospitalized'}[char.fate]||char.fate;
+    const tail=char.fate==='dead'?' · thread ended':' · you can stay, or follow the living story';
     document.getElementById('col-head-meta').textContent=
-      `${fateLabel}${char.fateDay?' — '+char.fateDay:''} · thread closed`;
+      `${fateLabel}${char.fateDay?' — '+char.fateDay:''}${tail}`;
     return;
   }
   const s=staminaLabel(char.stamina);
@@ -1510,12 +1511,14 @@ function renderBeats(){
 
 function setUI(on){
   const char=W.chars.find(c=>c.id===activeId);
-  // Ended characters are read-only forever. No actions, no memories, no skips. The past is witnessable, not playable.
-  const ended=char&&char.fate;
-  const enable=on&&!ended;
+  // Only DEATH truly ends a thread — you cannot play a corpse. Arrest/hospitalization are real and
+  // confining, but the player may stay in that character (a cell, a hospital bed) as long as they want.
+  const dead=char&&char.fate==='dead';
+  const confined=char&&(char.fate==='imprisoned'||char.fate==='hospitalized');
+  const enable=on&&!dead;
   ['intent-input','do-btn','btn-mem','btn-skip'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=!enable;});
   const inp=document.getElementById('intent-input');
-  if(inp)inp.placeholder=ended?'this thread has ended':'anything — they will attempt it';
+  if(inp)inp.placeholder=dead?'this thread has ended':(confined?'you can stay here… or follow someone whose day is still moving':'anything — they will attempt it');
   const bb=document.getElementById('btn-back');
   if(bb)bb.disabled=!on||!char||char.activeIndex<=0;
 }
@@ -1953,7 +1956,7 @@ async function generateBeat(direction,jumpCtx,intent){
         char.agendaGenerated=true;
       }
       agendaItem=nextAgendaItem(char);
-      dir=`No explicit intention from the player — so the character keeps moving under their own momentum. FIRST, look at the MOST RECENT beat: if it left ANY open thread — a commitment they just made, an errand they set out on, someone they said they'd go see, an interview they lined up, a lead or question they just raised — CONTINUE THAT THREAD and carry it to its next real result. Do NOT drop, forget, or detour away from something the story just set in motion; follow through on it. ${agendaItem?`ONLY if the character is genuinely at a loose end with nothing open does their ordinary day carry them to the next thing on their plate: ${agendaItem.what} (${agendaItem.day} ${agendaItem.period}).`:''} Either way: one tight paragraph (two at most), something concrete changes, and it ends on a result or a real next choice — never stall, never merely pass time, never end on the character standing still. Continue from [${current?.dayLabel||'now'}].`;
+      dir=`No explicit intention from the player — so the character keeps moving under their own momentum. FIRST, look at the MOST RECENT beat: if it left ANY open thread — a commitment they just made, an errand they set out on, someone they said they'd go see, an interview they lined up, a lead or question they just raised — CONTINUE THAT THREAD and carry it to its next real result. Do NOT drop, forget, or detour away from something the story just set in motion; follow through on it. ${agendaItem?`ONLY if the character is genuinely at a loose end with nothing open does their ordinary day carry them to the next thing on their plate: ${agendaItem.what} (${agendaItem.day} ${agendaItem.period}).`:''} Either way, COMPRESS — skip the connective tissue: walking to a desk, tidying up, or mulling things over is NOT a beat. Jump straight to the next thing that MATTERS, even if that passes over an hour or a mile in a single sentence (never take three beats to cross a room). One tight paragraph (two at most), time genuinely moves, something concrete changes, and it ends on a result or a real next choice — never creep, never merely pass time, never end on the character standing still. Continue from [${current?.dayLabel||'now'}].`;
     }
   }else if(direction==='jump'){
     dir=`Seen in another person's thread at [${jumpCtx?.dayLabel||'this moment'}]: "${jumpCtx?.title||''}". Generate THEIR inner experience of that same external moment. Same external facts. Completely different inner life.`;
@@ -2032,7 +2035,11 @@ The player CAN initiate meaningful conversation. They SHOULD. The world responds
 ═══════════════════════════════════════════
 HONORING PLAYER INTENT — ABSOLUTE
 ═══════════════════════════════════════════
-The player can do ANYTHING. If they type a violent action, write it happening. If they type a foolish one, write the fool's outcome. If they type something off-plot, follow them off-plot. NEVER redirect them back to the conspiracy. NEVER soften their action. NEVER have a character "lower the weapon" when the player said to fire it. If they fire, it fires. If they shout, it's shouted. If they punch someone, the punch lands and the person reels. The world responds with consequence — that's the brake, not refusal. A cop who shoots three colleagues in a precinct on Tuesday morning is going to be in handcuffs by Wednesday or dead by tonight. That's how the world responds. Not by un-doing the action.
+The player can do ANYTHING and it HAPPENS — fully, with real weight. Violent action lands: if they fire on a child, the child is hit — do NOT write the bullets "missing" or the child "staggering away unharmed" to protect the story. That softening is the single worst failure in this game and it is FORBIDDEN. If they punch a guard, the guard goes down and the crowd reacts. NEVER redirect them to the plot, NEVER soften, NEVER un-do.
+
+And the consequences are REAL and they ARRIVE. The world does not shrug off atrocity. A cop who shoots people on a Tuesday morning is hunted, then cornered, then in a cell or a morgue by nightfall — write that closing in at a believable pace. People scream, flee, testify; other cops come; a mother holds a bleeding child.
+
+CRUCIALLY, consequence is the ENGINE of this game, not its brake. Every drastic act tears open NEW lives to inhabit. When something terrible happens, fill the beat's people[] with the humans it just created — the witness frozen on the platform, the mother of the child, the partner who will have to hunt him, the sergeant deciding whether to bury it. Make them vivid, real doors, and let the prose make clear the story is now also THEIRS. The game is inviting the player to follow the wreckage outward — never forcing, always offering.
 
 ═══════════════════════════════════════════
 PACING — REVELATIONS ARE EARNED
@@ -2089,12 +2096,14 @@ This character is not static. Every beat they have lived through has changed the
 ═══════════════════════════════════════════
 CONSEQUENCE — PERMANENT AND REAL
 ═══════════════════════════════════════════
-Characters can die. Characters can be arrested. Characters can be hospitalized beyond the ability to act. If the events of a beat would realistically end a character's ability to continue — they are shot fatally, they are taken into custody, they are beaten into a hospital bed — then END THEM. Set "characterFate" in your output:
- - "dead" — they died in this beat. Write the death with deliberate, specific weight. Not generic. This is the last thing the player reads of this person.
- - "imprisoned" — they were arrested/jailed in this beat and will not be free within this week. Write the arrest, the cell door, the specific finality.
- - "hospitalized" — they are alive but physically unable to act for the rest of the week. Write them going under, the ward, the ceiling.
+When events earn it, set a permanent "characterFate" — EARNED by what happens, never arbitrary, and real:
+ - "dead" — they died in this beat. Write the death with specific weight. This TRULY ends the thread — the last thing the player reads of them.
+ - "imprisoned" — arrested/jailed in this beat; not free this week. Write the cuffs, the cell door.
+ - "hospitalized" — alive but broken, bedridden for the week. Write them going under, the ward, the ceiling.
  - null — they continue (the overwhelming majority of beats).
-Do NOT protect characters from the consequences of player actions. A cop who shoots colleagues in a precinct is in custody or dead within hours — write that arriving. Do NOT kill characters arbitrarily either — fate must be EARNED by the events. When a fate lands, it is permanent. There are no rescues, no escapes, no take-backs.
+Do NOT protect characters from consequences and do NOT soften. A cop who shoots people is hunted and caught — write that arriving.
+
+IMPORTANT — the player is NEVER forced out of a character. Death is the only true end (no playing a corpse). An imprisoned or hospitalized character can STILL be played if the player insists — they are simply confined: a cell, a bunk, a hospital bed. When you write a character who is already imprisoned or hospitalized, keep their beats realistically small and quiet — the guard's rounds, the ceiling, the long dull hours, a note passed — while the vivid, moving story happens elsewhere to other people. Do NOT invent an unrealistic escape to re-energize them. Keep the world's louder threads visible (in people[] and facts) so the player feels the pull to go follow them — but let them sit in that cell as long as they choose.
 
 ═══════════════════════════════════════════
 NAMING — IDENTITY IS PERSPECTIVAL
