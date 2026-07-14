@@ -319,6 +319,7 @@ input[type=text]::placeholder{color:var(--text3);font-style:italic}
 .enc-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;background:var(--th-surface);border:1px solid var(--th-border);border-radius:1px}
 .enc-name{font-family:var(--th-head-font);font-size:12px;color:var(--th-text)}
 .enc-role{font-family:var(--th-ui-font);font-size:8px;color:var(--th-text3);margin-top:1px}
+.enc-invite{font-family:var(--th-ui-font);font-size:9px;letter-spacing:.4px;color:var(--th-text2);margin:12px 0 6px;opacity:.9}
 .enc-traits{font-family:var(--th-prose-font);font-size:11px;font-style:italic;color:var(--th-text3);margin-top:1px}
 .jump-btn{background:none;border:1px solid var(--th-border);color:var(--th-text3);font-family:var(--th-ui-font);font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:4px 8px;cursor:pointer;border-radius:1px;transition:all .15s;white-space:nowrap;flex-shrink:0}
 .jump-btn:hover{border-color:var(--th-accent2);color:var(--th-accent)}
@@ -1458,7 +1459,9 @@ function renderBeats(){
         return rn!==myName;
       });
       if(othersOnly.length){
-        peopleHtml='<div class="beat-people">'+othersOnly.map(p=>{
+        const charged=!!beat.characterFate||othersOnly.length>=2;
+        const invite=`<div class="enc-invite">${charged?'↳ Their lives just changed too — step into anyone below.':'↳ Their day is still moving. Step into anyone.'}</div>`;
+        peopleHtml='<div class="beat-people">'+invite+othersOnly.map(p=>{
           const realName=p.realName||p.name||'';
           const ex=W.chars.find(c=>(c.realName||c.name).toLowerCase()===realName.toLowerCase());
           const cid=ex?ex.id:null;
@@ -2111,7 +2114,7 @@ NAMING — IDENTITY IS PERSPECTIVAL
 This is core to the game's soul. NO ONE is ever "Unnamed Sergeant" or "Officer #3." Every person has a real name. But the player only KNOWS a person's real name if the current character would know it.
 
 For each person in the "people" array, provide:
- - "realName": their true full name (e.g. "Thomas Reilly"). Always give a real, specific, period-appropriate name. Never "unnamed," never a number, never a bare role.
+ - "realName": their true full name (e.g. "Thomas Reilly"). ALWAYS a real, specific, period-appropriate PROPER NAME — first and last. This is CRITICAL and a current failure point: NEVER put a descriptor, role, or "the ___" phrase in realName (NOT "the young man with the envelope," NOT "the desk sergeant," NOT "the triplets," NOT "a vendor"). Even a one-line peanut vendor or a bystander who appears for a sentence gets a real name like "Sal Marchetti" or "Edith Coyle." TWO DIFFERENT PEOPLE MUST HAVE TWO DIFFERENT NAMES — never reuse a name or a descriptor across distinct people. (Reusing "the young man with the envelope" for a vendor AND a guard AND a bystander is the exact bug to avoid: it silently merges them into one broken character.) The descriptor belongs in "label," NEVER here.
  - "label": how THIS character actually thinks of them RIGHT NOW. If the current character knows them, the label is just their name ("Tom Reilly"). If the current character does NOT know their name, the label is how this character would naturally refer to them — based on role, appearance, or history. Make labels HUMAN and specific to the viewer's perspective: "the desk sergeant," "the kid with the chipped tooth," "the cop who ticketed me last spring," "the big quiet one by the door." If there's a reason this character would have a wry or pointed nickname for them, use it.
  - "nameKnownToViewer": true if the current character genuinely knows this person's real name (a colleague, a friend, someone introduced by name in this scene); false if they're a stranger the character can only describe.
 
