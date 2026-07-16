@@ -52,8 +52,26 @@ Bund false-flag at Game 7 is the hidden spine. Empathy + perspective is the poin
   relevant ~40 lines get read, not the whole file.
 - **Avoid workflows/ultracode** for routine edits — they spawn many agents and burn huge usage.
 
-## Open items (not yet done)
-- Concrete bugs from the audit: duplicate character on name-collision; orphaned
-  protagonist when the LLM returns the active character inside its own `people[]`.
-- Deep prompt de-bloat (`generateBeat` system prompt is ~10k tokens, redundant).
-- Decision: real 1937 Series was Yankees 4–1 (no Game 6/7). Keep real teams, or fictionalize?
+## Recently shipped (see `git log` for detail)
+Baseball truth enforced in code (`seriesState`/`enforceBaseball`); story director (gentle
+current); facts split canon/soft + capped; buildup foreboding fix; orphan-duplicate
+protagonist fix; REAL consequences that spawn follow-cards; **jail/hospital no longer lock
+you out — only death ends a thread**; passive beats compress (no baby-steps); naming
+cross-wiring fix (unique proper names, no descriptors in `realName`); louder switch-invite
+above the jump cards.
+
+## Open items
+- **VERIFY IN PLAY (owner to playtest):** do jump cards now show unique correctly-named
+  people? do drastic actions actually land consequences + spawn follow-people? If names
+  still cross-wire, add a code guard that refuses to merge distinct people under a shared
+  descriptor (prompt fix alone may not fully hold).
+- **Deep prompt de-bloat** — `generateBeat` system prompt is very long/redundant; wants the
+  adversarial "don't-kill-the-magic" review. Do when usage allows, not blind.
+- **Decision (owner's call):** real 1937 Series was Yankees 4–1 (no Game 6/7). Keep real
+  teams, or fictionalize the teams to make it bulletproof?
+- **Offered, not run:** a "dry-run" test where Claude role-plays the real system prompt to
+  sanity-check output quality (directional only — Claude ≠ GPT-4o).
+
+## Keeping this brief current
+When you finish a work session, update the two sections above so the *next* session starts
+oriented without re-reading everything. That's what keeps sessions cheap.
