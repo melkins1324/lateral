@@ -1486,7 +1486,7 @@ function renderBeats(){
     }
 
     div.innerHTML=`
-      <div class="beat-day">${esc(beat.dayLabel||'')}${isPresent?' <span style="opacity:.4">· now</span>':''}</div>
+      <div class="beat-day">${esc(beat.dayLabel||'')}${beat.time?' · '+esc(beat.time):''}${isPresent?' <span style="opacity:.4">· now</span>':''}</div>
       ${beat.intent?`<div class="beat-intent">${esc(beat.intent)}</div>`:''}
       <div class="beat-prose">${fmtProse(beat.prose||'')}</div>
       ${peopleHtml}
@@ -1959,7 +1959,7 @@ async function generateBeat(direction,jumpCtx,intent){
         char.agendaGenerated=true;
       }
       agendaItem=nextAgendaItem(char);
-      dir=`No explicit intention from the player — so the character keeps moving under their own momentum. FIRST, look at the MOST RECENT beat: if it left ANY open thread — a commitment they just made, an errand they set out on, someone they said they'd go see, an interview they lined up, a lead or question they just raised — CONTINUE THAT THREAD and carry it to its next real result. Do NOT drop, forget, or detour away from something the story just set in motion; follow through on it. ${agendaItem?`ONLY if the character is genuinely at a loose end with nothing open does their ordinary day carry them to the next thing on their plate: ${agendaItem.what} (${agendaItem.day} ${agendaItem.period}).`:''} Either way, COMPRESS — skip the connective tissue: walking to a desk, tidying up, or mulling things over is NOT a beat. Jump straight to the next thing that MATTERS, even if that passes over an hour or a mile in a single sentence (never take three beats to cross a room). One tight paragraph (two at most), time genuinely moves, something concrete changes, and it ends on a result or a real next choice — never creep, never merely pass time, never end on the character standing still. Continue from [${current?.dayLabel||'now'}].`;
+      dir=`No explicit intention from the player — so the character keeps moving under their own momentum. FIRST, look at the MOST RECENT beat: if it left ANY open thread — a commitment they just made, an errand they set out on, someone they said they'd go see, an interview they lined up, a lead or question they just raised — CONTINUE THAT THREAD and carry it to its next real result. Do NOT drop, forget, or detour away from something the story just set in motion; follow through on it. ${agendaItem?`ONLY if the character is genuinely at a loose end with nothing open does their ordinary day carry them to the next thing on their plate: ${agendaItem.what} (${agendaItem.day} ${agendaItem.period}).`:''} COMPRESS the boring connective tissue — walking to a desk, tidying up, or mulling things over is NOT a beat, and crossing a room must never take three beats. BUT compression means skipping DEAD time, NEVER skipping a LIVE thread: if someone just asked a question, made an offer, or started an exchange, or a charged thing just appeared, that unresolved thread IS "the next thing that matters" — play it out, do not leap past it and forget it. When nothing is open, jump ahead freely, passing over an hour or a mile in a sentence to reach the next real thing. Either way: one tight paragraph (two at most), time genuinely moves, something concrete changes, and it ends on a result or a real next choice — never creep, never merely pass time, never end on the character standing still. Continue from [${current?.dayLabel||'now'}].`;
     }
   }else if(direction==='jump'){
     dir=`Seen in another person's thread at [${jumpCtx?.dayLabel||'this moment'}]: "${jumpCtx?.title||''}". Generate THEIR inner experience of that same external moment. Same external facts. Completely different inner life.`;
@@ -2161,6 +2161,7 @@ ${staminaInstruction(char.stamina)}
 OUTPUT valid JSON only:
 {
   "dayLabel":"string",
+  "time":"string — a clock time for this beat like 11:40 a.m.; ADVANCE it realistically each beat (a compressed or skip-ahead beat may jump an hour or more, a quick exchange only minutes).",
   "title":"string (4–7 evocative words)",
   "prose":"string (a tight scene — usually ONE short paragraph, two at most; every sentence advances something; use \\n\\n between paragraphs)",
   "slept":false,
