@@ -880,6 +880,32 @@ function storyDirector(char){
   return `THE CURRENT — a gentle pull, NEVER a leash. It is ${phase}. The natural gravity of the day leans toward ${pull}. RULES: (1) If the player gives ANY clear direction, follow it ANYWHERE — even far from all of that — and honor it completely; their day simply moves the way they chose. (2) If the player is vague, passive, or silent, let the current carry them one concrete step toward that gravity. (3) NEVER block them, NEVER railroad, NEVER invent a coincidence or contrivance to force them back toward the story. The storyline is an invitation the world keeps quietly offering — not a track the player is stuck on.`;
 }
 
+// CONSEQUENCE ENFORCER — the drastic-action counterpart to the baseball truth: code detects when the
+// player is doing something whose real-world fallout must not be waved away, and forces the beat to make
+// 1937 New York react proportionally and PERMANENTLY. Honors freedom (never refuses the action) — it only
+// refuses to let the world pretend nothing happened. Empty string when nothing drastic is detected.
+function consequenceDirective(intent){
+  const t=(intent||'').toLowerCase();
+  const patterns=[
+    [/\b(?:shoots?|shooting|shot)\b(?!\s+(?:the\s+(?:breeze|bull|shit)|of)\b)|\bfires?\s+(?:the|his|her|my|a)\s+(?:gun|pistol|revolver|weapon)\b|\bopen(?:s|ed)?\s+fire\b|\bgun\s?fire\b|\bdischarge[sd]?\b/, 'firing a weapon in public'],
+    [/\b(?:kill|kills|killed|killing|murder\w*|stab\w*|strangl\w*)\b/, 'killing or gravely wounding someone'],
+    [/\b(punch\w*|hits?\s+(?:him|her|them|the)|slaps?|assault\w*|beat\s+(?:up|him|her|them)|attack\w*|strike[sd]?\s+(?:him|her|them))\b/, 'assaulting someone'],
+    [/\b(naked|nude|nudity|undress\w*|strips?\s+(?:down|off|naked)?|streak\w*|expose[sd]?\s+himself|flash\w*)\b/, 'public indecency'],
+    [/\b(robs?|robbed|robbing|steals?|stole|stealing|loot\w*|mug\w*|holds?\s+up\b)\b/, 'robbery or theft'],
+    [/\b(set\s+fire|arson|burns?\s+down|torch\w*|firebomb\w*)\b/, 'arson'],
+    [/\b(threaten\w*|hostage|kidnap\w*|point\w*\s+(?:the|his|her|a)\s+(?:gun|pistol|weapon))\b/, 'a violent threat'],
+  ];
+  const hits=[];
+  for(const [re,label] of patterns){ if(re.test(t)) hits.push(label); }
+  if(!hits.length) return '';
+  return `
+CONSEQUENCE ENFORCEMENT — the player is having this character do something drastic: ${hits.join('; ')}. HONOR the action fully — do not refuse it, do not soften it, do not skip the messy part. But 1937 New York is REAL and it REACTS, in this beat and forever after:
+- Do not skip or gloss the surrounding world. If a place would have people (a bowling alley, a subway car, a street), they are THERE and they respond as real people do — recoiling, screaming, scattering, shouting for a cop.
+- Authority comes. A public crime like this brings police, arrest, witnesses, a report. It does NOT evaporate and the character CANNOT stroll back into their ordinary day as if nothing happened.
+- Make it PERMANENT. When the action warrants it, set "characterFate" to "imprisoned" (arrested/jailed), "hospitalized" (badly hurt), or "dead". Record exactly what happened in "facts" so the world remembers it, and add "ripples" for how it lands on others.
+- A cop or official who does this is finished — it costs them their post, their standing, their freedom. Never write a clean, triumphant, consequence-free escape from a serious crime.`;
+}
+
 let activeId=null,isGen=false,isMemGen=false,ttsActive=false;
 const uid=()=>'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const load=()=>{const s=localStorage.getItem('lateral_v7');if(s)try{W=JSON.parse(s)}catch(e){}migrateFacts();migrateNaming();};
@@ -1080,9 +1106,11 @@ async function generateAgenda(char){
 RULES:
 - Make every item CONCRETE and specific to THIS person's life and job — a named place, a named person, a real task with a real stake. "Sign in at the 5th Precinct roll call; Sergeant Boyle marks latecomers" — not "do police work."
 - Give each item a small consequence if it's missed (someone waits, pay is docked, a debt grows, a chance is lost). That's what makes them pull.
+- FILL THE WORKING DAY with real WORK, not errands-then-idle. Each day this person actually works should carry SEVERAL substantive tasks across morning and afternoon — the actual labor of their trade, with specific people and specific stakes — before any break or leisure. A character should never reach midday having done nothing; leisure (a hot dog, a drink, a chat) is earned AFTER real work, not instead of it. For a cop: roll call, then the beat itself — a shopkeeper's complaint, a drunk to move along, a stolen-goods tip, a superior checking on him. Give the trade its texture.
+- BUILD TOWARD THE GAME. As each game-day afternoon wears on, the city tightens toward first pitch — crowds thickening, ticket scalpers, radios in every window, the whole day leaning toward the ballpark. Later-day items should feel this rising pull WITHOUT any dread or foreshadowing of trouble: it is pure baseball-fever excitement, not menace.
 - These are the character's PRIVATE, ORDINARY life — NOT the plot, NOT the coming trouble at the ballpark, NOTHING ominous or political. Tuesday–Wednesday especially must stay completely mundane. The character has no idea anything is coming.
 - Spread them across the week, weighted toward Tuesday–Wednesday (most items there). A couple can fall Thursday–Sunday and may be looser and more human ("get word to your sister that you're alright", "collect what the shop still owes you") to fit an unsettled week.
-- 7 to 9 items. Chronological.
+- 10 to 14 items, with at least 3–4 on Tuesday alone (morning + afternoon), so the daytime is genuinely full. Chronological.
 
 OUTPUT valid JSON only:
 { "agenda": [ { "day": "Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday", "period": "morning|afternoon|evening|night", "what": "one concrete sentence — the obligation and its small stake" } ] }`;
@@ -1932,7 +1960,7 @@ async function generateBeat(direction,jumpCtx,intent){
       }).join('\n\n———\n\n')
     :'';
   const thread=beats.length
-    ?`${olderSummary?`EARLIER IN THE WEEK (summary):\n${olderSummary}\n\n`:''}${verbatimText?`RECENT SCENES, VERBATIM — continue seamlessly from these. Do NOT contradict anything here. Do NOT re-stage or re-introduce a scene that is already underway; if a conversation is in progress, continue inside it from where it stands:\n\n${verbatimText}`:''}`
+    ?`${olderSummary?`EARLIER IN THE WEEK (summary):\n${olderSummary}\n\n`:''}${verbatimText?`RECENT SCENES, VERBATIM — continue seamlessly from these. Do NOT contradict anything here. Do NOT re-stage or re-introduce a scene that is already underway; if a conversation is in progress, continue inside it from where it stands:\n\n${verbatimText}\n\nSTATE CONTINUITY — non-negotiable:\n- Begin EXACTLY where the last beat left the character — same place, same moment, same company. If they ended mid-walk or already at a spot, do NOT teleport them to a new location without crossing the ground between; do NOT rewind them to arriving somewhere they had already reached.\n- Their established SITUATION persists and may not silently flip: a posting called "new" or "unfamiliar" is still new the next beat (not suddenly "familiar"); an injury, a mood, a job, who they are with, what they were just assigned — all carry forward. If something changes, SHOW it change; never quietly contradict it.`:''}`
     :'No moments yet.';
 
   // Build anti-repetition note from last 2 beats
@@ -1973,6 +2001,8 @@ async function generateBeat(direction,jumpCtx,intent){
   }
   // The story is a current, not a rail: nudge ongoing forward beats toward the day's gravity, never force.
   if(direction==='forward' && beats.length) dir += '\n\n'+storyDirector(char);
+  // Drastic player actions get code-forced, proportional, permanent fallout (freedom kept; the world just reacts).
+  if(intent){ const cd=consequenceDirective(intent); if(cd) dir += '\n\n'+cd; }
 
   const sys=`You are writing one beat in a character's week for a 1937 New York narrative game. The week has three phases:
  - BUILDUP (Tuesday–Wednesday): The week before. Underneath, something is quietly being set in motion around the World Series — but it happens OFF-PAGE and the surface of the week stays completely ordinary. Do NOT write uneasy cops, reporters who "smell something," or tension building on the page — that is the banned foreboding register. Strange details (a delivery, an odd errand, a new face) appear as plain, unremarked facts of ordinary life; the character thinks nothing of them. NOTHING is named. First-time players have no idea what is coming. NEVER spoil the shooting in buildup beats. Game 6 is Tuesday night; the Giants win Game 6, forcing Game 7 on Thursday — a fixed fact of the world.
