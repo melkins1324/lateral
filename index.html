@@ -827,7 +827,8 @@ function seriesState(day){
   return {standing,game,prompt:
 `BASEBALL — CANONICAL, DERIVED FROM THE CALENDAR (this is TRUTH; never contradict it, never invent a different score):
 - 1937 World Series, Yankees vs Giants. As of ${day||W.clockDay||'Tuesday'}: ${standing}. ${game}
-- IMPOSSIBLE — never write any of these: a sweep or "clean sweep" of the Series; a 4–0 or 0–4 Series; a "Game 8" or eighth game; ANY World Series champion or a team that "won the Series." Nobody ever wins this Series — it goes 3–2, then 3–3, then is abandoned.`};
+- IMPOSSIBLE — never write any of these: a sweep or "clean sweep" of the Series; a 4–0 or 0–4 Series; a "Game 8" or eighth game; ANY World Series champion or a team that "won the Series." Nobody ever wins this Series — it goes 3–2, then 3–3, then is abandoned.
+- FANS ARE DIVIDED — this is a Subway Series between two NEW YORK teams, so the city is SPLIT, not united behind one club. Do NOT write everyone rooting for the Giants. A given New Yorker roots Yankees OR Giants (or doesn't care), and the two camps needle each other. Rough texture, not a rule to state aloud: YANKEES fans skew the confident winners' crowd — the American League dynasty of Ruth/Gehrig/DiMaggio, strivers and the upwardly-mobile, a big Italian-American following behind DiMaggio, Bronx swagger. GIANTS fans skew the older National League loyalty — Manhattan, established, Irish-rooted, traditional, proud, with a chip on the shoulder about losing to the Yankees. Pick each character's allegiance from WHO THEY ARE and keep it consistent.`};
 }
 // Returns a short label of the impossible thing the prose referenced, or null.
 function baseballViolation(text){
@@ -1520,6 +1521,12 @@ function setUI(on){
   const confined=char&&(char.fate==='imprisoned'||char.fate==='hospitalized');
   const enable=on&&!dead;
   ['intent-input','do-btn','btn-mem','btn-skip'].forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=!enable;});
+  // Don't show the "what do they do?" controls until this character actually has a beat on screen.
+  // Until the intro (opening scene OR a mid-game bridge) has rendered, only the loading indicator shows —
+  // no premature "type an action / press enter" prompt over an empty thread.
+  const hasBeat=(W.beats[activeId]||[]).length>0;
+  const bar=document.getElementById('intent-bar');
+  if(bar)bar.querySelectorAll('.intent-label,.intent-row,.aux-row').forEach(el=>{el.style.display=hasBeat?'':'none';});
   const inp=document.getElementById('intent-input');
   if(inp)inp.placeholder=dead?'this thread has ended':(confined?'you can stay here… or follow someone whose day is still moving':'anything — they will attempt it');
   const bb=document.getElementById('btn-back');
