@@ -860,6 +860,40 @@ async function enforceBaseball(beat,sys,user,apiKey){
   }catch(e){ return beat; }
 }
 
+// ── PROSE BREVITY / ANTI-PURPLE ENFORCER ───────────────────────────
+// The wordiness counterpart to the baseball truth. The system prompt already BEGS for spare,
+// plain prose across many paragraphs and GPT-4o still writes ornate run-ons — so pleas alone
+// don't hold. This MEASURES the draft: too long, or metaphor-stacked, and the beat is regenerated
+// ONCE with a hard trim directive, keeping every structured field and swapping in only the tighter
+// prose. Fully guarded — any failure keeps the original beat unchanged.
+function proseOverwrought(text){
+  const t=text||'';
+  const words=(t.trim().match(/\S+/g)||[]).length;
+  if(words>100) return `too long (${words} words)`;
+  const similes=(t.match(/\b(?:like a|like the|as if|as though)\b/gi)||[]).length;
+  if(similes>=2) return 'too many stacked similes/metaphors';
+  return null;
+}
+async function enforceBrevity(beat,sys,user,apiKey){
+  try{
+    const reason=proseOverwrought(beat&&beat.prose);
+    if(!reason) return beat;
+    const correction=`\n\nREWRITE — your previous draft was ${reason}. Write the SAME beat (same events, same people, same outcome, same JSON shape) but PLAIN and SHORT: report what happens in concrete words, one tight paragraph (two only if genuinely necessary), well under 100 words. At most ONE figurative image in the whole beat — no stacked metaphors or similes, no lyrical asides about memory, aromas, the city's pulse/symphony, or the weight of things. Set the table with a detail or two, then get to the action and stop.`;
+    const res=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+      body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:sys+correction},{role:'user',content:user}],temperature:0.7,max_tokens:1400,response_format:{type:"json_object"}})
+    });
+    const data=await res.json();
+    if(data.error) return beat;
+    const fixed=JSON.parse(data.choices?.[0]?.message?.content?.replace(/```json|```/g,'')||'{}');
+    const newLen=(((fixed&&fixed.prose)||'').trim().match(/\S+/g)||[]).length;
+    const oldLen=((beat.prose||'').trim().match(/\S+/g)||[]).length;
+    // Keep ONLY the tighter prose; preserve every other structured field (facts, people, fate, opens, ripples).
+    if(fixed&&fixed.prose&&newLen>0&&newLen<oldLen){ beat.prose=fixed.prose; }
+    return beat;
+  }catch(e){ return beat; }
+}
+
 // ── STORY DIRECTOR — a gentle current, never a leash ───────────────
 // Supplies each ongoing forward beat with a soft forward-vector derived from the
 // calendar phase. The player can ALWAYS go anywhere; this only provides gravity
@@ -1884,8 +1918,10 @@ VOICE & CRAFT — CRITICAL:
 - BRIEF: a few sentences — a short catch-up, not a chapter. This is a threshold: orient the player in who they now are and where the story stands, then get out of the way. No filler, no atmosphere for its own sake. End ready for the player to take over — at a real decision or a moment of motion, never on stalling or wondering.
 - It is an ordinary week. Unless the established facts say otherwise, do NOT inject menace or significance. Keep it human.
 
+PEOPLE — CRITICAL: anyone who appears or is named in this bridge (a customer greeted, a regular, a face on the street, someone spoken to or about) MUST be listed in "people" so the player can step into them — the same way forward beats do it. Give each a real, specific, period-appropriate PROPER NAME (first + last); never a bare role or "the ___" (the descriptor goes in "label"). Two different people get two different names. Do NOT list the new character themselves. If the bridge mentions three regulars by name, all three go in "people".
+
 OUTPUT valid JSON only:
-{"dayLabel":"${worldAt.day} ${worldAt.period}","prose":"the bridge passage, \\n\\n between paragraphs"}`;
+{"dayLabel":"${worldAt.day} ${worldAt.period}","prose":"the bridge passage, \\n\\n between paragraphs","people":[{"realName":"string (their true full name)","label":"string (how THIS character refers to them)","nameKnownToViewer":false,"role":"string","traits":["string","string"]}]}`;
 
   try{
     const res=await fetch('https://api.openai.com/v1/chat/completions',{
@@ -1904,6 +1940,19 @@ OUTPUT valid JSON only:
       isBridge:true,
       slept:false
     };
+    // Register anyone the bridge introduced so they become switchable cards (same as forward beats).
+    const bridgePeople=Array.isArray(parsed.people)?parsed.people:[];
+    bridgeBeat.people=bridgePeople;
+    bridgePeople.forEach(p=>{
+      const realName=p.realName||p.name||'';
+      if(!realName) return;
+      const pid=addChar(realName,p.role||'',p.traits||[],dest.name);
+      if(pid&&pid!==destId){
+        if(p.nameKnownToViewer){ earnName(destId,pid); }
+        else if(p.label){ setLabel(destId,pid,p.label); }
+        recordConn(destId,pid,'');
+      }
+    });
     if(!W.beats[destId])W.beats[destId]=[];
     W.beats[destId].push(bridgeBeat);
     // Sync this character to the world clock
@@ -1966,7 +2015,7 @@ async function generateBeat(direction,jumpCtx,intent){
   // Build anti-repetition note from last 2 beats
   const recentBeats=beats.slice(-2);
   const antiRepeat=recentBeats.length
-    ?`\nANTI-REPETITION: The last ${recentBeats.length} beat(s) covered: ${recentBeats.map(b=>`"${b.title||''}" (${b.dayLabel})`).join(', ')}. Do NOT return to the same emotional register, location, or interaction. Move somewhere genuinely different — different place, different internal state, different stakes. If the last beats involved tension with a specific person, the next beat goes elsewhere.`
+    ?`\nNO RECAP, NO REPETITION: The reader JUST read the previous beat(s): ${recentBeats.map(b=>`"${b.title||''}" (${b.dayLabel})`).join(', ')}. Do NOT recap, restate, or re-describe what already happened — not the scene, not the same sensory details (the smell of gunpowder, the fading bread, the crowd's gasp), not the same emotional note struck again. Assume it is fresh in the reader's mind and DO NOT re-establish it. START THIS BEAT FROM THE VERY NEXT THING THAT HAPPENS and push forward — new action, new information, or a real choice. Every beat must add; a beat that mostly re-renders the previous one has failed.`
     :'';
 
   // Build cumulative character arc summary from thread
@@ -2223,6 +2272,7 @@ Day: ${char.currentDay||'Tuesday'}\nTHREAD:\n${thread}${antiRepeat}${arcSummary}
     if(data.error) throw new Error(data.error.message);
     let beat=JSON.parse(data.choices?.[0]?.message?.content?.replace(/```json|```/g,'')||'{}');
     beat=await enforceBaseball(beat,sys,user,apiKey);
+    beat=await enforceBrevity(beat,sys,user,apiKey);
     beat.id=uid();beat.intent=intent||null;
 
     const bArr=W.beats[activeId];
