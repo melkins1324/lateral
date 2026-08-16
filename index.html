@@ -492,7 +492,7 @@ input[type=text]::placeholder{color:var(--text3);font-style:italic}
   <div class="nav-right">
     <button class="nbtn" id="tts-btn" onclick="toggleTTS()" style="display:none">▶ aloud</button>
     <button class="nbtn warn" onclick="resetWorld()">reset</button>
-    <button class="nbtn" onclick="openSettings()">api key</button>
+    <button class="nbtn" onclick="openSettings()">settings</button>
   </div>
 </nav>
 
@@ -617,10 +617,18 @@ input[type=text]::placeholder{color:var(--text3);font-style:italic}
 <!-- MODALS -->
 <div class="modal-bg" id="settings-modal">
   <div class="modal">
-    <h3>API Key</h3>
+    <h3>Settings</h3>
     <p>Your OpenAI key. Stored only in this browser.</p>
     <div class="modal-row"><input type="text" id="api-field" placeholder="sk-..." style="flex:1"><button class="enter-btn" onclick="saveKey()">Save</button></div>
     <div class="modal-ok" id="key-ok">Saved.</div>
+    <p style="margin-top:16px">Story model. A stronger model writes better and follows the rules more closely — it costs a bit more per beat. You can switch mid-game and feel the difference on the next scene.</p>
+    <div class="modal-row"><select id="model-field" style="flex:1;padding:8px" onchange="saveModel()">
+      <option value="gpt-4o">GPT-4o — default</option>
+      <option value="gpt-4.1">GPT-4.1 — stronger writing (recommended)</option>
+      <option value="gpt-4.1-mini">GPT-4.1 mini — cheaper, still sharp</option>
+      <option value="gpt-4o-mini">GPT-4o mini — cheapest / fastest</option>
+    </select></div>
+    <div class="modal-ok" id="model-ok">Model set.</div>
     <div class="modal-foot"><button class="nbtn" onclick="closeSettings()">close</button></div>
   </div>
 </div>
@@ -850,7 +858,7 @@ async function enforceBaseball(beat,sys,user,apiKey){
     const correction=`\n\nCORRECTION — your previous draft referenced ${v}, which is IMPOSSIBLE in this world. ${seriesState(W.clockDay).prompt}\nRewrite the SAME beat — same events, same characters, same length — with NO impossible baseball reference. Same JSON shape.`;
     const res=await fetch('https://api.openai.com/v1/chat/completions',{
       method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
-      body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:sys+correction},{role:'user',content:user}],temperature:0.7,max_tokens:1400,response_format:{type:"json_object"}})
+      body:JSON.stringify({model:genModel(),messages:[{role:'system',content:sys+correction},{role:'user',content:user}],temperature:0.7,max_tokens:1400,response_format:{type:"json_object"}})
     });
     const data=await res.json();
     if(data.error) return beat;
@@ -881,7 +889,7 @@ async function enforceBrevity(beat,sys,user,apiKey){
     const correction=`\n\nREWRITE — your previous draft was ${reason}. Write the SAME beat (same events, same people, same outcome, same JSON shape) but PLAIN and SHORT: report what happens in concrete words, one tight paragraph (two only if genuinely necessary), well under 100 words. At most ONE figurative image in the whole beat — no stacked metaphors or similes, no lyrical asides about memory, aromas, the city's pulse/symphony, or the weight of things. Set the table with a detail or two, then get to the action and stop.`;
     const res=await fetch('https://api.openai.com/v1/chat/completions',{
       method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
-      body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:sys+correction},{role:'user',content:user}],temperature:0.7,max_tokens:1400,response_format:{type:"json_object"}})
+      body:JSON.stringify({model:genModel(),messages:[{role:'system',content:sys+correction},{role:'user',content:user}],temperature:0.7,max_tokens:1400,response_format:{type:"json_object"}})
     });
     const data=await res.json();
     if(data.error) return beat;
@@ -937,7 +945,7 @@ async function enforceBuildupCalm(beat,char,sys,user,apiKey){
     const correction=`\n\nREWRITE — it is the BUILDUP (Tuesday/Wednesday) and the surface of the week must stay completely ORDINARY. Your draft hinted at something beyond the ballgame — a gathering, "something besides baseball", something coming. That is FORBIDDEN this early: NOTHING is brewing on the page and no character senses anything coming. Rewrite the SAME beat (same people, same place, same JSON shape) with NO hint of intrigue or menace. If a character was being coy about "something more," make them plainly ordinary instead — they talk about the game, the crowd, the lineup, their own life — and the scene resolves cleanly rather than dangling a mystery. Same JSON shape.`;
     const res=await fetch('https://api.openai.com/v1/chat/completions',{
       method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
-      body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:sys+correction},{role:'user',content:user}],temperature:0.8,max_tokens:1400,response_format:{type:"json_object"}})
+      body:JSON.stringify({model:genModel(),messages:[{role:'system',content:sys+correction},{role:'user',content:user}],temperature:0.8,max_tokens:1400,response_format:{type:"json_object"}})
     });
     const data=await res.json();
     if(data.error) return beat;
@@ -1145,7 +1153,7 @@ OUTPUT valid JSON only — exact same shape as the examples:
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
       body:JSON.stringify({
-        model:'gpt-4o',
+        model:genModel(),
         messages:[{role:'system',content:sys},{role:'user',content:user}],
         temperature:0.85,
         max_tokens:900,
@@ -1209,7 +1217,7 @@ OUTPUT valid JSON only:
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
       body:JSON.stringify({
-        model:'gpt-4o',
+        model:genModel(),
         messages:[{role:'system',content:sys},{role:'user',content:user}],
         temperature:0.9,
         max_tokens:900,
@@ -1294,7 +1302,7 @@ async function generatePrelude(){
     const res=await fetch('https://api.openai.com/v1/chat/completions',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
-      body:JSON.stringify({model:'gpt-4o',messages:[{role:'user',content:`Write the OPENING SCENE for a narrative game set in New York City, Tuesday morning, October 1937. The World Series is on — Yankees vs Giants, the Yankees lead 3 games to 2, Game 6 is tonight. The whole city is bending toward the game. Present tense, sensory, specific, WARM. This is an ordinary, alive, exciting baseball morning — nothing ominous, no tension, no politics, no foreshadowing.
+      body:JSON.stringify({model:genModel(),messages:[{role:'user',content:`Write the OPENING SCENE for a narrative game set in New York City, Tuesday morning, October 1937. The World Series is on — Yankees vs Giants, the Yankees lead 3 games to 2, Game 6 is tonight. The whole city is bending toward the game. Present tense, sensory, specific, WARM. This is an ordinary, alive, exciting baseball morning — nothing ominous, no tension, no politics, no foreshadowing.
 
 Move through the waking city and GLIMPSE, for a sentence or two each, several ordinary people — do NOT name them, just show them mid-life so they feel real and recognizable:
 - an old peanut vendor stacking his sacks, twenty years working the ballpark
@@ -1711,7 +1719,7 @@ async function generateMemoryFromIntent(intent){
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
       body:JSON.stringify({
-        model:'gpt-4o',
+        model:genModel(),
         messages:[
           {role:'system',content:`You are surfacing a specific memory for a character in 1937 New York. The player has directed this character to remember something specific. Generate that memory as a vivid flashback scene. FLASHBACK — read only. Fixed past. No choices. 3 paragraphs, sensory, specific. No redemption. Ordinary unglamorous cause. The memory must directly address what the player asked the character to remember — make it concrete and specific, not vague. CONSISTENCY: This memory may NOT contradict any existing world fact. If another character also remembers or witnessed this same event, the objective facts must match exactly — only this character's subjective experience of it differs. Lock in the key facts from this memory as world facts. OUTPUT valid JSON only: {"era":"string","title":"string","prose":"string","facts":["string — specific facts this memory establishes permanently"]}`},
           {role:'user',content:`CHARACTER: ${char.name} (${char.role})\nPresent moment: ${current?`[${current.dayLabel}] "${current.title||''}"`:' start of week'}\nPlayer direction: "${intent}"\nExisting world facts:\n${allFacts}\nExisting memories:\n${existing}`}
@@ -1980,7 +1988,7 @@ OUTPUT valid JSON only:
     const res=await fetch('https://api.openai.com/v1/chat/completions',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
-      body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:sys},{role:'user',content:'Write the bridge.'}],temperature:0.85,max_tokens:700,response_format:{type:"json_object"}})
+      body:JSON.stringify({model:genModel(),messages:[{role:'system',content:sys},{role:'user',content:'Write the bridge.'}],temperature:0.85,max_tokens:700,response_format:{type:"json_object"}})
     });
     const data=await res.json();
     if(data.error) throw new Error(data.error.message||'bridge failed');
@@ -2320,7 +2328,7 @@ Day: ${char.currentDay||'Tuesday'}\nTHREAD:\n${thread}${antiRepeat}${arcSummary}
     const res=await fetch('https://api.openai.com/v1/chat/completions',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
-      body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:sys},{role:'user',content:user}],temperature:0.93,max_tokens:1400,response_format:{type:"json_object"}})
+      body:JSON.stringify({model:genModel(),messages:[{role:'system',content:sys},{role:'user',content:user}],temperature:0.93,max_tokens:1400,response_format:{type:"json_object"}})
     });
     const data=await res.json();
     if(data.error) throw new Error(data.error.message);
@@ -2471,7 +2479,7 @@ Current moment: ${current?`[${current.dayLabel}] "${current.title||''}"`:' start
     const res=await fetch('https://api.openai.com/v1/chat/completions',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
-      body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:sys},{role:'user',content:user}],temperature:0.93,max_tokens:1200,response_format:{type:"json_object"}})
+      body:JSON.stringify({model:genModel(),messages:[{role:'system',content:sys},{role:'user',content:user}],temperature:0.93,max_tokens:1200,response_format:{type:"json_object"}})
     });
     const data=await res.json();
     if(data.error)throw new Error(data.error.message);
@@ -2560,7 +2568,7 @@ async function generateMemory(){
     const res=await fetch('https://api.openai.com/v1/chat/completions',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
-      body:JSON.stringify({model:'gpt-4o',messages:[
+      body:JSON.stringify({model:genModel(),messages:[
         {role:'system',content:`You are surfacing a memory for a character in 1937 New York. FLASHBACK — read only. Fixed past. No choices. 3 paragraphs, sensory, specific. No redemption. Ordinary unglamorous cause. CONSISTENCY: This memory may NOT contradict any existing world fact listed below. If another character witnessed the same event, the objective facts match exactly — only the subjective experience differs. OUTPUT valid JSON only: {"era":"string","title":"string","prose":"string","facts":["string"]}`},
         {role:'user',content:`CHARACTER: ${char.name} (${char.role})\nPresent: ${current?`[${current.dayLabel}] "${current.title||''}"`:' start of week'}\nESTABLISHED WORLD FACTS:\n${factsForPrompt()}\nMemories:\n${existing}\n\n${deeper}`}
       ],temperature:0.95,max_tokens:900,response_format:{type:"json_object"}})
@@ -2631,7 +2639,10 @@ function toggleTTS(){
 // ══════════════════════════════════════════════════
 // MODALS / RESET
 // ══════════════════════════════════════════════════
-function openSettings(){document.getElementById('api-field').value=localStorage.getItem('lateral_apikey')||'';document.getElementById('key-ok').style.display='none';document.getElementById('settings-modal').classList.add('open');}
+// The model every generation call uses. Player-switchable in Settings; defaults to gpt-4o.
+function genModel(){return localStorage.getItem('lateral_model')||'gpt-4o';}
+function saveModel(){localStorage.setItem('lateral_model',document.getElementById('model-field').value);const m=document.getElementById('model-ok');if(m)m.style.display='block';}
+function openSettings(){document.getElementById('api-field').value=localStorage.getItem('lateral_apikey')||'';const mf=document.getElementById('model-field');if(mf)mf.value=genModel();document.getElementById('key-ok').style.display='none';const mo=document.getElementById('model-ok');if(mo)mo.style.display='none';document.getElementById('settings-modal').classList.add('open');}
 function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
 function saveKey(){localStorage.setItem('lateral_apikey',document.getElementById('api-field').value.trim());document.getElementById('key-ok').style.display='block';}
 function openAddModal(){document.getElementById('add-modal').classList.add('open');}
