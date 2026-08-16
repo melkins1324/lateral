@@ -894,6 +894,59 @@ async function enforceBrevity(beat,sys,user,apiKey){
   }catch(e){ return beat; }
 }
 
+// ── DESCRIPTOR-NAME GUARD ──────────────────────────────────────────
+// The model is told every person gets a real first+last name, but it still sometimes returns a bare
+// descriptor ("the barkeep", "a woman", "Stranger") as realName. Keyed on that, two DIFFERENT people
+// collide into one cross-wired card that flickers between roles. This detects a non-name so the people
+// processor can skip making a broken switchable character out of it (the person still appears in prose).
+function isDescriptorName(name){
+  const n=(name||'').trim();
+  if(!n) return true;
+  if(/^(the|a|an|some|that|this|another)\s/i.test(n)) return true;   // "the barkeep", "a woman"
+  if(!/[A-Z]/.test(n)) return true;                                   // no capital anywhere → not a proper name
+  // A single bare common-role word, even capitalized ("Barkeep", "Stranger", "Vendor").
+  if(!/\s/.test(n) && /^(barkeep|bartender|stranger|vendor|man|woman|guy|fella|cop|officer|patrolman|sergeant|clerk|waiter|waitress|kid|boy|girl|lady|gent|driver|guard|nurse|doctor|priest|customer|patron|regular|groundskeeper|usher|conductor|cook|maid|butler|bellhop|newsboy|reporter|foreman|worker|neighbor|passerby|bystander|stranger)$/i.test(n)) return true;
+  return false;
+}
+
+// ── BUILDUP CALM ENFORCER (anti-premature-foreboding) ──────────────
+// Design rule: Tue–Wed the surface stays ORDINARY; the plot moves off-page; dread is earned Thursday+.
+// The prompt begs for this and the model still telegraphs the coming trouble on Tuesday ("something
+// besides baseball", "a gathering", "more going on") — which both breaks the rule AND traps scenes in a
+// loop, because it dangles a mystery it isn't allowed to pay off yet. This catches the telegraph in code
+// during buildup and regenerates ONCE as an ordinary beat. Fully guarded; failure keeps the original.
+function forebodingMarker(text){
+  const t=(text||'').toLowerCase();
+  const pats=[
+    /\bnot (?:just |only )?(?:for|about) (?:the )?(?:game|baseball|series)\b/,
+    /\bbesides (?:the )?(?:game|baseball|ballgame)\b/,
+    /\bmore than (?:just )?(?:a |the )?(?:ball\s?)?game\b/,
+    /\bsomething (?:else|more|bigger|other) (?:going on|afoot|brewing|at (?:work|play)|in the (?:air|works))\b/,
+    /\bsomething('s| is)?\s+(?:coming|brewing|planned|being planned|in the works|about to happen)\b/,
+    /\ba gathering\b/,
+    /\bwhispers? of\b/,
+    /\b(?:more|bigger) (?:crowd|turnout).{0,20}\bnot (?:just )?(?:for|about) (?:the )?game\b/,
+  ];
+  return pats.some(re=>re.test(t));
+}
+async function enforceBuildupCalm(beat,char,sys,user,apiKey){
+  try{
+    const day=(char&&char.currentDay)||W.clockDay||'Tuesday';
+    if(clockIndex(day,'night')>=clockIndex('Thursday','morning')) return beat; // Thursday+ may carry dread
+    if(!forebodingMarker(beat&&beat.prose)) return beat;
+    const correction=`\n\nREWRITE — it is the BUILDUP (Tuesday/Wednesday) and the surface of the week must stay completely ORDINARY. Your draft hinted at something beyond the ballgame — a gathering, "something besides baseball", something coming. That is FORBIDDEN this early: NOTHING is brewing on the page and no character senses anything coming. Rewrite the SAME beat (same people, same place, same JSON shape) with NO hint of intrigue or menace. If a character was being coy about "something more," make them plainly ordinary instead — they talk about the game, the crowd, the lineup, their own life — and the scene resolves cleanly rather than dangling a mystery. Same JSON shape.`;
+    const res=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${apiKey}`},
+      body:JSON.stringify({model:'gpt-4o',messages:[{role:'system',content:sys+correction},{role:'user',content:user}],temperature:0.8,max_tokens:1400,response_format:{type:"json_object"}})
+    });
+    const data=await res.json();
+    if(data.error) return beat;
+    const fixed=JSON.parse(data.choices?.[0]?.message?.content?.replace(/```json|```/g,'')||'{}');
+    if(fixed&&fixed.prose&&!forebodingMarker(fixed.prose)){ beat.prose=fixed.prose; if(Array.isArray(fixed.people))beat.people=fixed.people; if(Array.isArray(fixed.facts))beat.facts=fixed.facts; if('opens' in fixed)beat.opens=fixed.opens; }
+    return beat;
+  }catch(e){ return beat; }
+}
+
 // ── STORY DIRECTOR — a gentle current, never a leash ───────────────
 // Supplies each ongoing forward beat with a soft forward-vector derived from the
 // calendar phase. The player can ALWAYS go anywhere; this only provides gravity
@@ -1941,7 +1994,8 @@ OUTPUT valid JSON only:
       slept:false
     };
     // Register anyone the bridge introduced so they become switchable cards (same as forward beats).
-    const bridgePeople=Array.isArray(parsed.people)?parsed.people:[];
+    // Drop bare-descriptor "names" ("the barkeep") — they'd make broken, cross-wired cards.
+    const bridgePeople=(Array.isArray(parsed.people)?parsed.people:[]).filter(p=>!isDescriptorName(p.realName||p.name||''));
     bridgeBeat.people=bridgePeople;
     bridgePeople.forEach(p=>{
       const realName=p.realName||p.name||'';
@@ -2015,7 +2069,7 @@ async function generateBeat(direction,jumpCtx,intent){
   // Build anti-repetition note from last 2 beats
   const recentBeats=beats.slice(-2);
   const antiRepeat=recentBeats.length
-    ?`\nNO RECAP, NO REPETITION: The reader JUST read the previous beat(s): ${recentBeats.map(b=>`"${b.title||''}" (${b.dayLabel})`).join(', ')}. Do NOT recap, restate, or re-describe what already happened — not the scene, not the same sensory details (the smell of gunpowder, the fading bread, the crowd's gasp), not the same emotional note struck again. Assume it is fresh in the reader's mind and DO NOT re-establish it. START THIS BEAT FROM THE VERY NEXT THING THAT HAPPENS and push forward — new action, new information, or a real choice. Every beat must add; a beat that mostly re-renders the previous one has failed.`
+    ?`\nNO RECAP, NO REPETITION: The reader JUST read the previous beat(s): ${recentBeats.map(b=>`"${b.title||''}" (${b.dayLabel})`).join(', ')}. Do NOT recap, restate, or re-describe what already happened — not the scene, not the same sensory details (the smell of gunpowder, the fading bread, the crowd's gasp), not the same emotional note struck again. Assume it is fresh in the reader's mind and DO NOT re-establish it. START THIS BEAT FROM THE VERY NEXT THING THAT HAPPENS and push forward — new action, new information, or a real choice. Every beat must add; a beat that mostly re-renders the previous one has failed. NO LOOPING CONVERSATIONS: if a character was just pressed for information, they do NOT give the same evasive non-answer again ("just chatter," "who knows," "might be something"). On a second press they either reveal something CONCRETE and new, or plainly refuse and the scene MOVES ON to something else. Never dangle the same tease a third time.`
     :'';
 
   // Build cumulative character arc summary from thread
@@ -2273,6 +2327,7 @@ Day: ${char.currentDay||'Tuesday'}\nTHREAD:\n${thread}${antiRepeat}${arcSummary}
     let beat=JSON.parse(data.choices?.[0]?.message?.content?.replace(/```json|```/g,'')||'{}');
     beat=await enforceBaseball(beat,sys,user,apiKey);
     beat=await enforceBrevity(beat,sys,user,apiKey);
+    beat=await enforceBuildupCalm(beat,char,sys,user,apiKey);
     beat.id=uid();beat.intent=intent||null;
 
     const bArr=W.beats[activeId];
@@ -2308,6 +2363,9 @@ Day: ${char.currentDay||'Tuesday'}\nTHREAD:\n${thread}${antiRepeat}${arcSummary}
       }[beat.characterFate];
       addFact(fateText,char.name,beat.dayLabel||'',beat.title||'');
     }
+    // Drop anyone the model named with a bare descriptor ("the barkeep", "a woman") — keeping them would
+    // create broken, cross-wired switch cards. They still exist in the prose; they just don't get a card.
+    if(Array.isArray(beat.people)) beat.people=beat.people.filter(p=>!isDescriptorName(p.realName||p.name||''));
     (beat.people||[]).forEach(p=>{
       const realName=p.realName||p.name||'';
       if(!realName) return;
@@ -2437,6 +2495,7 @@ Current moment: ${current?`[${current.dayLabel}] "${current.title||''}"`:' start
         advanceWorldClock(pc.day,pc.period);
       }
       (beat.facts||[]).forEach(f=>addFact(f,char.name,beat.dayLabel||'',beat.title||''));
+      if(Array.isArray(beat.people)) beat.people=beat.people.filter(p=>!isDescriptorName(p.realName||p.name||''));
       (beat.people||[]).forEach(p=>{
         const realName=p.realName||p.name||'';
         if(!realName) return;
