@@ -623,8 +623,8 @@ input[type=text]::placeholder{color:var(--text3);font-style:italic}
     <div class="modal-ok" id="key-ok">Saved.</div>
     <p style="margin-top:16px">Story model. A stronger model writes better and follows the rules more closely — it costs a bit more per beat. You can switch mid-game and feel the difference on the next scene.</p>
     <div class="modal-row"><select id="model-field" style="flex:1;padding:8px" onchange="saveModel()">
-      <option value="gpt-4o">GPT-4o — default</option>
-      <option value="gpt-4.1">GPT-4.1 — stronger writing (recommended)</option>
+      <option value="gpt-4.1">GPT-4.1 — default, stronger writing</option>
+      <option value="gpt-4o">GPT-4o — original</option>
       <option value="gpt-4.1-mini">GPT-4.1 mini — cheaper, still sharp</option>
       <option value="gpt-4o-mini">GPT-4o mini — cheapest / fastest</option>
     </select></div>
@@ -2640,7 +2640,7 @@ function toggleTTS(){
 // MODALS / RESET
 // ══════════════════════════════════════════════════
 // The model every generation call uses. Player-switchable in Settings; defaults to gpt-4o.
-function genModel(){return localStorage.getItem('lateral_model')||'gpt-4o';}
+function genModel(){return localStorage.getItem('lateral_model')||'gpt-4.1';}
 function saveModel(){localStorage.setItem('lateral_model',document.getElementById('model-field').value);const m=document.getElementById('model-ok');if(m)m.style.display='block';}
 function openSettings(){document.getElementById('api-field').value=localStorage.getItem('lateral_apikey')||'';const mf=document.getElementById('model-field');if(mf)mf.value=genModel();document.getElementById('key-ok').style.display='none';const mo=document.getElementById('model-ok');if(mo)mo.style.display='none';document.getElementById('settings-modal').classList.add('open');}
 function closeSettings(){document.getElementById('settings-modal').classList.remove('open');}
