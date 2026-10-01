@@ -1,0 +1,21 @@
+{
+  "chars": [
+    {"id": "c1", "name": "Ruth Kessler", "realName": "Ruth Kessler"}
+  ],
+  "beats": {
+    "c1": [
+      {
+        "dayLabel": "Tuesday morning", "time": "7:30 a.m.", "title": "the kitchen",
+        "prose": "Ruth counts the coins on the table twice, the rent three days late, and decides the ticket can still be sold if the Series goes long enough.",
+        "people": [
+          {"realName": "Edith Coyle", "label": "the woman next door", "role": "neighbor"}
+        ]
+      },
+      {
+        "dayLabel": "Tuesday afternoon", "time": "1:15 p.m.", "title": "the stairwell",
+        "prose": "The Yankees lead the Series three games to two, and the hallway radio says so twice before she reaches the street.",
+        "people": []
+      }
+    ]
+  }
+}

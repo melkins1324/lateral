@@ -1,0 +1,89 @@
+{
+  "chars": [
+    {
+      "id": "c1",
+      "name": "Danny Maguire",
+      "realName": "Danny Maguire"
+    },
+    {
+      "id": "c2",
+      "name": "Sal Benedetti",
+      "realName": "Sal Benedetti"
+    }
+  ],
+  "beats": {
+    "c1": [
+      {
+        "dayLabel": "Tuesday morning",
+        "time": "8:10 a.m.",
+        "title": "the beat",
+        "prose": "Danny couldn't shake the feeling that something was off as the air hummed with tension.",
+        "people": []
+      },
+      {
+        "dayLabel": "Tuesday afternoon",
+        "time": "2:00 p.m.",
+        "title": "the shots",
+        "prose": "Danny fired twice at the boys, but they ran off unharmed, barely a scratch on either of them.",
+        "people": [
+          {
+            "realName": "the young man with the envelope",
+            "label": "a stranger",
+            "role": "vendor"
+          },
+          {
+            "realName": "Danny Maguire",
+            "label": "himself",
+            "role": "cop"
+          }
+        ]
+      },
+      {
+        "dayLabel": "Tuesday morning",
+        "time": "9:00 a.m.",
+        "title": "backward beat",
+        "prose": "The Giants swept the Series in four straight games as the crowd cheered a new champion.",
+        "people": [
+          {
+            "realName": "the young man with the envelope",
+            "label": "a different stranger",
+            "role": "guard"
+          }
+        ]
+      }
+    ],
+    "c2": [
+      {
+        "dayLabel": "Tuesday morning",
+        "time": "7:00 a.m.",
+        "title": "clean beat",
+        "prose": "Sal counts his sacks of peanuts and thinks about the rent due Friday.",
+        "people": [
+          {
+            "realName": "Morris Kaplan",
+            "label": "Morris",
+            "role": "vendor"
+          }
+        ]
+      },
+      {
+        "dayLabel": "Tuesday evening",
+        "time": "6:00 p.m.",
+        "title": "the mixup",
+        "prose": "Morris Kaplan waves from the hot dog stand, and moments later Morris Kaplan argues with a cop about parking.",
+        "people": [
+          {
+            "realName": "Morris Kaplan",
+            "label": "Morris",
+            "role": "vendor"
+          },
+          {
+            "realName": "Morris Kaplan",
+            "label": "the man arguing",
+            "role": "driver"
+          }
+        ]
+      }
+    ]
+  }
+}
