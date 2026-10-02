@@ -1,0 +1,4 @@
+.env
+shortcuts/signed/
+__pycache__/
+*.pyc
